@@ -19,13 +19,12 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.cache();
 
 		var Vue = require( 'vue' );
-		var VueApp = require( './app.vue' );
-		console.warn('VueApp', VueApp);
+		app.vue = require( './app.vue' );
 
-		app.vue = new Vue( {
+		new Vue( {
 			el: '#zwoowh',
 			render: function ( createElement ) {
-				return createElement( VueApp );
+				return createElement( app.vue );
 			}
 		} );
 	};

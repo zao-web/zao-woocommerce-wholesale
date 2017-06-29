@@ -34,9 +34,6 @@
 		},
 
 		methods : {
-			onModalClose() {
-				alert( 'close dat box' );
-			}
 		}
 	}
 </script>
