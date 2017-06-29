@@ -1,14 +1,16 @@
 <?php
 namespace Zao\ZaoWooCommerce_Wholesale;
 
-class General {
+class Plugin extends Base {
 
 	protected static $single_instance = null;
+
+	protected $admin;
 
 	/**
 	 * Creates or returns an instance of this class.
 	 * @since  0.1.0
-	 * @return General A single instance of this class.
+	 * @return Plugin A single instance of this class.
 	 */
 	public static function get_instance() {
 		if ( null === self::$single_instance ) {
@@ -19,18 +21,16 @@ class General {
 	}
 
 	protected function __construct() {
-
+		if ( is_admin() ) {
+			$this->admin = new Admin;
+		}
 	}
 
 	public function init() {
-		add_action( 'all_admin_notices', function() {
-			echo '<div id="message" class="updated"><p>';
-
-				echo 'HOWDY';
-
-			echo '</p></div>';
-		} );
+		if ( is_admin() ) {
+			$this->admin->init();
+		}
 	}
 
 }
-General::get_instance();
+Plugin::get_instance();

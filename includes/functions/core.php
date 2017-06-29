@@ -91,12 +91,11 @@ function init() {
 		define( 'ZWOOWH_DEBUG', false );
 	}
 
-	$general = General::get_instance();
+	$zwoowh = Plugin::get_instance();
 
-	add_action( 'zwoowh_init', array( $general, 'init' ) );
+	add_action( 'zwoowh_init', array( $zwoowh, 'init' ) );
 
-	do_action( 'zwoowh_init', $general );
-
+	do_action( 'zwoowh_init', $zwoowh );
 }
 
 /**
