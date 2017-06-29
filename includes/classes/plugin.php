@@ -22,7 +22,7 @@ class Plugin extends Base {
 
 	protected function __construct() {
 		if ( is_admin() ) {
-			$this->admin = new Admin;
+			$this->admin = new Admin\Admin;
 		}
 	}
 

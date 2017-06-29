@@ -1,13 +1,15 @@
 <?php
 
-namespace Zao\ZaoWooCommerce_Wholesale;
+namespace Zao\ZaoWooCommerce_Wholesale\Admin;
 
-class Admin extends Base {
+class Menu extends Admin {
+	public function __construct() {}
+
 	public function init() {
-		add_action( 'admin_menu', array( $this, 'register_menu_page' ), 999 );
+		add_action( 'admin_menu', array( $this, 'register_redirecting_menu_page' ), 999 );
 	}
 
-	public function register_menu_page() {
+	public function register_redirecting_menu_page() {
 		$wholesale_page = add_submenu_page(
 			'woocommerce',
 			__( 'Add Wholesale Order', 'zwoowh' ),
