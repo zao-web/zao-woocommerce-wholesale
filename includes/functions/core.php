@@ -1,5 +1,5 @@
 <?php
-namespace TenUp\ZaoWooCommerce_Wholesale\Core;
+namespace Zao\ZaoWooCommerce_Wholesale;
 
 /**
  * Default setup routine

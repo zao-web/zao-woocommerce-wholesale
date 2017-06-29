@@ -1,6 +1,6 @@
 <?php
 
-namespace TenUp\ZaoWooCommerce_Wholesale;
+namespace Zao\ZaoWooCommerce_Wholesale;
 
 use PHPUnit_Framework_TestResult;
 use Text_Template;

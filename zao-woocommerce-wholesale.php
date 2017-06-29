@@ -4,7 +4,7 @@
  * Plugin URI:  https://zao.is
  * Description: Generate wholesale orders for WooCommerce
  * Version:     0.1.0
- * Author:      JT Sternberg
+ * Author:      Zao
  * Author URI:  https://zao.is
  * Text Domain: zwoowh
  * Domain Path: /languages
@@ -12,7 +12,7 @@
  */
 
 /**
- * Copyright (c) 2017 JT Sternberg (email : jt@zao.is)
+ * Copyright (c) 2017 Zao (email : jt@zao.is)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 or, at
@@ -44,10 +44,9 @@ define( 'ZWOOWH_INC',     ZWOOWH_PATH . 'includes/' );
 // Include files
 require_once ZWOOWH_INC . 'functions/core.php';
 
-
 // Activation/Deactivation
-register_activation_hook( __FILE__, '\TenUp\ZaoWooCommerce_Wholesale\Core\activate' );
-register_deactivation_hook( __FILE__, '\TenUp\ZaoWooCommerce_Wholesale\Core\deactivate' );
+register_activation_hook( __FILE__, '\Zao\ZaoWooCommerce_Wholesale\activate' );
+register_deactivation_hook( __FILE__, '\Zao\ZaoWooCommerce_Wholesale\deactivate' );
 
 // Bootstrap
-TenUp\ZaoWooCommerce_Wholesale\Core\setup();
+Zao\ZaoWooCommerce_Wholesale\setup();
