@@ -2,6 +2,46 @@
 namespace Zao\ZaoWooCommerce_Wholesale;
 
 /**
+ * Autoloads files with classes when needed
+ *
+ * @since  3.0.0
+ * @param  string $class_name Name of the class being requested.
+ * @return void
+ */
+function autoload( $class_name ) {
+
+	// project-specific namespace prefix
+	$prefix = __NAMESPACE__ . '\\';
+
+	// does the class use the namespace prefix?
+	$len = strlen( $prefix );
+
+	if ( 0 !== strncmp( $prefix, $class_name, $len ) ) {
+		// no, move to the next registered autoloader
+		return;
+	}
+
+	// base directory for the namespace prefix
+	$base_dir = ZWOOWH_INC . 'classes/';
+
+	// get the relative class name
+	$relative_class = substr( $class_name, $len );
+
+	/*
+	 * replace the namespace prefix with the base directory, replace namespace
+	 * separators with directory separators in the relative class name, replace
+	 * underscores with dashes, and append with .php
+	 */
+	$path = strtolower( str_replace( array( '\\', '_' ), array( '/', '-' ), $relative_class ) );
+	$file = $base_dir . $path . '.php';
+
+	// if the file exists, require it
+	if ( file_exists( $file ) ) {
+		require $file;
+	}
+}
+
+/**
  * Default setup routine
  *
  * @uses add_action()
@@ -13,6 +53,8 @@ function setup() {
 	$n = function( $function ) {
 		return __NAMESPACE__ . "\\$function";
 	};
+
+	spl_autoload_register( $n( 'autoload' ), false );
 
 	add_action( 'init', $n( 'i18n' ) );
 	add_action( 'init', $n( 'init' ) );
@@ -45,7 +87,16 @@ function i18n() {
  * @return void
  */
 function init() {
-	do_action( 'zwoowh_init' );
+	if ( ! defined( 'ZWOOWH_DEBUG' ) ) {
+		define( 'ZWOOWH_DEBUG', false );
+	}
+
+	$general = General::get_instance();
+
+	add_action( 'zwoowh_init', array( $general, 'init' ) );
+
+	do_action( 'zwoowh_init', $general );
+
 }
 
 /**
