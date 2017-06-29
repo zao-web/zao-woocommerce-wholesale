@@ -1,0 +1,27 @@
+{
+	"name": "zao-woocommerce-wholesale",
+	"description": "Generate wholesale orders for WooCommerce",
+	"version": "0.1.0",
+	"type": "wordpress-plugin",
+	"keywords": [],
+	"homepage": "https://zao.is",
+	"license": "GPL-2.0+",
+	"authors": [
+		{
+			"name": "JT Sternberg",
+			"email": "jt@zao.is",
+		"homepage": "https://zao.is",
+			"role": "Developer"
+		}
+	],
+    "minimum-stability": "dev",
+	"require": {
+		"php": ">=5.6"
+	},
+    "require-dev": {
+	    "antecedent/patchwork": "1.2.*",
+        "phpunit/phpunit"     : "*@stable",
+	    "brianium/paratest"   : "dev-master",
+        "10up/wp_mock"        : "dev-master"
+    }
+}
