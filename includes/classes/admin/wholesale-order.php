@@ -11,6 +11,9 @@ class Wholesale_Order extends Admin {
 	public function __construct() {}
 
 	public function init() {
+		$order_type_object = get_post_type_object( sanitize_text_field( $_GET['post_type'] ) );
+		$order_type_object->labels->add_new_item = __( 'Add new wholesale order', 'zwoowh' );
+
 		add_filter( 'admin_body_class', array( $this, 'filter_admin_body_class' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'add_help' ) );
