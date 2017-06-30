@@ -5,3 +5,36 @@
  * Copyright (c) 2017 Zao
  * Licensed under the GPL-2.0+ license.
  */
+
+.is-wholesale-order {
+
+}
+
+.wholesale-help-title {
+	display: none;
+}
+
+.fresh-wholesale-order {
+	.postbox:not( #woocommerce-order-data ) {
+		display: none;
+	}
+
+	.metabox-holder .postbox-container .empty-container {
+		border: 0;
+	}
+
+	#zwoowh {
+		display: none;
+	}
+
+	.wholesale-help-title {
+		display: block;
+		clear: both;
+		padding-top: 1em;
+	}
+
+	#order_data .wholesale-help-title {
+		font-size: 1.5em;
+		line-height: 1.4em;
+	}
+}

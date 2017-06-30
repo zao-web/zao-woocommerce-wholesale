@@ -1,5 +1,5 @@
 /**
- * Zao WooCommerce Wholesale - v0.1.0 - 2017-06-29
+ * Zao WooCommerce Wholesale - v0.1.0 - 2017-06-30
  * https://zao.is
  *
  * Copyright (c) 2017 Zao
@@ -37,7 +37,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{staticClass:"red"},[_c('button',{staticClass:"button-secondary",on:{"click":function($event){_vm.modalOpen = ! _vm.modalOpen}}},[_vm._v(_vm._s(_vm.btnText))])]),_vm._v(" "),_c('modal',{directives:[{name:"show",rawName:"v-show",value:(_vm.modalOpen),expression:"modalOpen"}],on:{"modalClose":function($event){_vm.modalOpen = false}}},[_c('template',{slot:"title"},[_vm._v("Select Products")]),_vm._v("\n\n\t\tHey, this is some text\n\n\t\t"),_c('span',{slot:"addBtn"},[_vm._v("Add Product")])],2)],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{attrs:{"id":"zwoowh"}},[_c('div',{staticClass:"red"},[_c('button',{staticClass:"button-secondary",on:{"click":function($event){_vm.modalOpen = ! _vm.modalOpen}}},[_vm._v(_vm._s(_vm.btnText))])]),_vm._v(" "),_c('modal',{directives:[{name:"show",rawName:"v-show",value:(_vm.modalOpen),expression:"modalOpen"}],on:{"modalClose":function($event){_vm.modalOpen = false}}},[_c('template',{slot:"title"},[_vm._v("Select Products")]),_vm._v("\n\n\t\tHey, this is some text\n\n\t\t"),_c('span',{slot:"addBtn"},[_vm._v("Add Product")])],2)],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -61,11 +61,21 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 
 window.ZWOOWH = window.ZWOOWH || {};
 
-(function (window, document, app, undefined) {
+(function (window, document, $, app, undefined) {
 	'use strict';
 
 	app.cache = function () {
 		app.$ = {};
+	};
+
+	app.toggleOrderBoxes = function (evt) {
+		console.warn('this', $(this).val());
+		var hasVal = $(this).val();
+		$(document.body)[hasVal ? 'removeClass' : 'addClass']('fresh-wholesale-order');
+
+		if (window.postboxes) {
+			postboxes._mark_area();
+		}
 	};
 
 	app.init = function () {
@@ -80,10 +90,12 @@ window.ZWOOWH = window.ZWOOWH || {};
 				return createElement(app.vue);
 			}
 		});
+
+		$('#customer_user').on('change', app.toggleOrderBoxes);
 	};
 
-	app.init();
-})(window, document, window.ZWOOWH);
+	$(app.init);
+})(window, document, jQuery, window.ZWOOWH);
 
 },{"./app.vue":1,"vue":6}],3:[function(require,module,exports){
 var __vueify_style_dispose__ = require("vueify/lib/insert-css").insert(".red {\n\tcolor: #f00;\n\tpadding: 100px 250px;\n}")

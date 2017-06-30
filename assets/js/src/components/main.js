@@ -8,11 +8,22 @@
 
 window.ZWOOWH = window.ZWOOWH || {};
 
-( function( window, document, app, undefined ) {
+( function( window, document, $, app, undefined ) {
 	'use strict';
 
 	app.cache = function() {
 		app.$ = {};
+	};
+
+	app.toggleOrderBoxes = function( evt ) {
+		console.warn('this', $( this ).val() );
+		var hasVal = $( this ).val();
+		$( document.body )[ hasVal ? 'removeClass' : 'addClass' ]( 'fresh-wholesale-order' );
+
+		if ( window.postboxes ) {
+			postboxes._mark_area();
+		}
+
 	};
 
 	app.init = function() {
@@ -27,9 +38,11 @@ window.ZWOOWH = window.ZWOOWH || {};
 				return createElement( app.vue );
 			}
 		} );
+
+		$( '#customer_user' ).on( 'change', app.toggleOrderBoxes );
 	};
 
-	app.init();
+	$( app.init );
 
-} )( window, document, window.ZWOOWH );
 
+} )( window, document, jQuery, window.ZWOOWH );
