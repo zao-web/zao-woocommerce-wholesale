@@ -7,6 +7,8 @@ class Plugin extends Base {
 
 	protected $admin;
 
+	protected $wholesale_users;
+
 	/**
 	 * Creates or returns an instance of this class.
 	 * @since  0.1.0
@@ -21,16 +23,22 @@ class Plugin extends Base {
 	}
 
 	protected function __construct() {
+
+		$this->wholesale_users = new User;
+
 		if ( is_admin() ) {
 			$this->admin = new Admin\Admin;
 		}
 	}
 
 	public function init() {
+
+		$this->wholesale_users->init();
+
 		if ( is_admin() ) {
 			$this->admin->init();
 		}
 	}
-
 }
+
 Plugin::get_instance();
