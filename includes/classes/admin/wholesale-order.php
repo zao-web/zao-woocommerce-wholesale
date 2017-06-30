@@ -2,6 +2,11 @@
 
 namespace Zao\ZaoWooCommerce_Wholesale\Admin;
 
+/**
+ * The order admin interface for wholesale orders.
+ *
+ * @todo Limit the customer select2 to only wc_wholesaler users.
+ */
 class Wholesale_Order extends Admin {
 	public function __construct() {}
 
@@ -24,7 +29,7 @@ class Wholesale_Order extends Admin {
 	}
 
 	public function add_help() {
-		echo '<h3 class="wholesale-help-title">' . __( 'First, Select a customer to associate this wholesale order.', 'zwoowh' ) . '</h3>';
+		echo '<h3 class="wholesale-help-title">' . __( 'First, Select a customer for this wholesale order.', 'zwoowh' ) . '</h3>';
 	}
 
 	public function add_app() {
