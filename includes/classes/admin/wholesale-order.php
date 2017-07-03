@@ -8,9 +8,23 @@ namespace Zao\ZaoWooCommerce_Wholesale\Admin;
  * @todo Limit the customer select2 to only wc_wholesaler users.
  */
 class Wholesale_Order extends Admin {
-	public function __construct() {}
+	protected $is_wholesale = false;
+
+	public function __construct() {
+		global $pagenow;
+
+		$this->is_wholesale = (
+			'post-new.php' === $pagenow
+			&& isset( $_GET['post_type'], $_GET['wholesale'] )
+			&& 'shop_order' === $_GET['post_type']
+		);
+	}
 
 	public function init() {
+		if ( ! $this->is_wholesale ) {
+			return;
+		}
+
 		$order_type_object = get_post_type_object( sanitize_text_field( $_GET['post_type'] ) );
 		$order_type_object->labels->add_new_item = __( 'Add new wholesale order', 'zwoowh' );
 
