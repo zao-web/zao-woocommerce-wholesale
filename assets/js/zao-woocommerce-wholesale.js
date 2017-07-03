@@ -1,5 +1,5 @@
 /**
- * Zao WooCommerce Wholesale - v0.1.0 - 2017-06-30
+ * Zao WooCommerce Wholesale - v0.1.0 - 2017-07-03
  * https://zao.is
  *
  * Copyright (c) 2017 Zao
@@ -91,7 +91,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 			}
 		});
 
-		$('#customer_user').on('change', app.toggleOrderBoxes);
+		$(document.getElementById('customer_user')).on('change', app.toggleOrderBoxes);
+
+		$.ajaxSetup({ data: { is_wholesale: app.is_wholesale } });
 	};
 
 	$(app.init);

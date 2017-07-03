@@ -39,7 +39,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 			}
 		} );
 
-		$( '#customer_user' ).on( 'change', app.toggleOrderBoxes );
+		$( document.getElementById( 'customer_user' ) ).on( 'change', app.toggleOrderBoxes );
+
+		$.ajaxSetup( { data : { is_wholesale: app.is_wholesale } } );
 	};
 
 	$( app.init );
