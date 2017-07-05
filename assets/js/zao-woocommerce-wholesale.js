@@ -1,5 +1,5 @@
 /**
- * Zao WooCommerce Wholesale - v0.1.0 - 2017-07-03
+ * Zao WooCommerce Wholesale - v0.1.0 - 2017-07-05
  * https://zao.is
  *
  * Copyright (c) 2017 Zao
@@ -71,7 +71,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 	app.toggleOrderBoxes = function (evt) {
 		console.warn('this', $(this).val());
 		var hasVal = $(this).val();
-		$(document.body)[hasVal ? 'removeClass' : 'addClass']('fresh-wholesale-order');
+		$(document.body)[hasVal ? 'removeClass' : 'addClass']('init-wholesale-order');
 
 		if (window.postboxes) {
 			postboxes._mark_area();

@@ -10,11 +10,70 @@
 
 }
 
-.wholesale-help-title {
-	display: none;
-}
+// .wholesale-help-title {
+// 	display: none;
+// }
 
-.fresh-wholesale-order {
+.init-wholesale-order {
+
+	#order_data {
+		padding-bottom: 23px;
+
+		// .wholesale-help-title {
+		// 	font-size: 1.5em;
+		// 	line-height: 1.4em;
+		// }
+
+		.order_data_column {
+			width: 99%;
+
+			.form-field {
+				font-size: 1.5em;
+				// zoom: 1.5;
+
+				label {
+					display: none;
+				}
+
+				.select2-container {
+
+				}
+			}
+		}
+	}
+
+	.select2-container {
+
+		.select2-selection--single {
+			height: auto;
+
+			.select2-selection__rendered {
+				padding-top: 10px;
+				padding-bottom: 10px;
+				height: auto;
+			}
+
+			.select2-selection__arrow {
+				height: 50px;
+			}
+		}
+
+	}
+
+	.order_data_column {
+		&:not(:first-of-type) {
+			display: none;
+		}
+
+		p, h3 {
+			display: none;
+		}
+
+		p:last-of-type {
+			display: block;
+		}
+	}
+
 	.postbox:not( #woocommerce-order-data ) {
 		display: none;
 	}
@@ -27,14 +86,9 @@
 		display: none;
 	}
 
-	.wholesale-help-title {
-		display: block;
-		clear: both;
-		padding-top: 1em;
-	}
-
-	#order_data .wholesale-help-title {
-		font-size: 1.5em;
-		line-height: 1.4em;
-	}
+	// .wholesale-help-title {
+	// 	display: block;
+	// 	clear: both;
+	// 	padding-top: 1em;
+	// }
 }

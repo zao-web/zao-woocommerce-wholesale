@@ -40,7 +40,7 @@ class Wholesale_Order extends Admin {
 	}
 
 	public function filter_admin_body_class( $body_class = '' ) {
-		$body_class = trim( $body_class ) . ' is-wholesale-order fresh-wholesale-order';
+		$body_class = trim( $body_class ) . ' is-wholesale-order init-wholesale-order';
 		return $body_class;
 	}
 
@@ -54,7 +54,13 @@ class Wholesale_Order extends Admin {
 	}
 
 	public function add_help() {
-		echo '<h3 class="wholesale-help-title">' . __( 'First, Select a customer for this wholesale order.', 'zwoowh' ) . '</h3>';
+		?>
+		<script>
+			var select = document.getElementById( 'customer_user' );
+			select.setAttribute( 'data-placeholder', '<?php echo esc_js( __( 'Search for Wholesaler', 'zwoowh' ) ); ?>' );
+			select.style.width = '99%';
+		</script>
+		<?php
 	}
 
 	public function add_app() {

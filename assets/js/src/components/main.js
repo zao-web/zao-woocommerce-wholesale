@@ -18,7 +18,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 	app.toggleOrderBoxes = function( evt ) {
 		console.warn('this', $( this ).val() );
 		var hasVal = $( this ).val();
-		$( document.body )[ hasVal ? 'removeClass' : 'addClass' ]( 'fresh-wholesale-order' );
+		$( document.body )[ hasVal ? 'removeClass' : 'addClass' ]( 'init-wholesale-order' );
 
 		if ( window.postboxes ) {
 			postboxes._mark_area();
