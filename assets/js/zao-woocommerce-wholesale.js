@@ -74,8 +74,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 	app.bodyClass = function (toRemove, toAdd) {
 		toRemove = true === toRemove ? 'init-wholesale-order build-wholesale-order' : toRemove;
-		console.warn('toRemove', toRemove);
-		console.warn('toAdd', toAdd);
+
 		if (toRemove) {
 			app.$.body.removeClass(toRemove);
 		}
@@ -101,6 +100,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			app.$.addItems.trigger('click');
 			window.setTimeout(function () {
 				app.$.addItem.trigger('click');
+				$(document.getElementById('add_item_id')).select2('open');
 			}, 150);
 		}
 
@@ -128,6 +128,12 @@ window.ZWOOWH = window.ZWOOWH || {};
 		}, 1000);
 
 		$.ajaxSetup({ data: { is_wholesale: app.is_wholesale } });
+
+		app.$.body.on('wc_backbone_modal_response', function (evt, target) {
+			if ('wc-modal-add-products' === target) {
+				app.bodyClass(true);
+			}
+		});
 	};
 
 	$(app.init);
