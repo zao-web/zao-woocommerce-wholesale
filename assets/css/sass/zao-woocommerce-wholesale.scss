@@ -60,6 +60,13 @@
 
 	}
 
+	.select2-container--default .select2-selection--single .select2-selection__arrow b {
+		border-width: 11px 10px 0;
+		margin-left: -22px;
+		margin-top: -2px;
+		border-color: #999 transparent transparent;
+	}
+
 	.order_data_column {
 		&:not(:first-of-type) {
 			display: none;
