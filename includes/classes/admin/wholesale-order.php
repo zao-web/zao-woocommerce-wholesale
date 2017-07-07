@@ -31,11 +31,14 @@ class Wholesale_Order extends Admin {
 		$order_type_object = get_post_type_object( sanitize_text_field( 'shop_order' ) );
 		$order_type_object->labels->add_new_item = __( 'Add new wholesale order', 'zwoowh' );
 
-		add_filter( 'admin_body_class', array( $this, 'filter_admin_body_class' ) );
+		add_filter( 'admin_body_class'     , array( $this, 'filter_admin_body_class' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
+		add_action( 'admin_footer'         , array( $this, 'add_app' ) );
 		add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'add_help' ) );
-		add_action( 'admin_footer', array( $this, 'add_app' ) );
 
+		// Add wholesale order meta
+		// woocommerce_get_price_excluding_tax <-- filter based on data, check did_action/current_action wp_ajax_woocommerce_add_order_item
+		//
 		add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
 	}
 
