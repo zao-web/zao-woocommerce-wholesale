@@ -1,49 +1,60 @@
 <style>
-	.red {
-		color: #f00;
-		padding: 100px 250px;
+	.zwoowh-content {
+		padding: 16px;
 	}
 </style>
 
 <template>
-	<div id="wc-backbone-modal-dialog" tabindex="0" v-show="isVisible">
-		<div class="wc-backbone-modal">
-			<div class="wc-backbone-modal-content">
-				<section class="wc-backbone-modal-main" role="main">
-					<header class="wc-backbone-modal-header">
-						<h1><slot name="title"></slot></h1>
-						<button @click="emitClose" class="modal-close modal-close-link dashicons dashicons-no-alt">
-							<span class="screen-reader-text">Close modal panel</span>
-						</button>
-					</header>
-					<article>
-						<form action="" method="post">
-							<slot></slot>
-						</form>
-					</article>
-					<footer>
-						<div class="inner">
-							<button id="btn-ok" class="button button-primary button-large"><slot name="addBtn"></slot></button>
+	<div id="zwoowh-modal" tabindex="0" style="position: relative;">
+		<div class="media-modal wp-core-ui">
+			<button type="button" @click="emitClose" class="media-modal-close">
+				<span class="media-modal-icon">
+					<span class="screen-reader-text">Close product selector</span>
+				</span>
+			</button>
+			<div class="media-modal-content">
+				<div class="media-frame mode-select wp-core-ui">
+					<div class="media-frame-menu">
+						<div class="media-menu">
+							<slot name="menu"></slot>
 						</div>
-					</footer>
-				</section>
+					</div>
+					<div class="media-frame-title">
+						<h1>
+							<slot name="title">Select Products</slot>
+						</h1>
+					</div>
+					<div class="media-frame-router">
+						<div class="media-router">
+							<slot name="router"></slot>
+						</div>
+					</div>
+					<div class="media-frame-content">
+						<div class="zwoowh-content">
+							<slot></slot>
+						</div>
+					</div>
+					<div class="media-frame-toolbar">
+						<div class="media-toolbar">
+							<div class="media-toolbar-primary search-form">
+								<slot name="addBtn">
+									<button type="button" class="button media-button button-primary button-large media-button-insert">Insert</button>
+								</slot>
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
-		<div class="wc-backbone-modal-backdrop modal-close"></div>
+		<div class="media-modal-backdrop"></div>
 	</div>
 </template>
 
 <script>
 	export default {
-		data () {
-			return {
-				isVisible : false,
-			}
-		},
-
 		methods : {
 			emitClose() {
-				this.$emit( 'modalClose' );
+				ZWOOWH.vEvent.$emit( 'modalClose' );
 			}
 		}
 	}
