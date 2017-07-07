@@ -40,6 +40,9 @@ class Wholesale_Order extends Admin {
 		// woocommerce_get_price_excluding_tax <-- filter based on data, check did_action/current_action wp_ajax_woocommerce_add_order_item
 		//
 		add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
+		// add_action( 'wp_ajax_zwoowh_get_products', array( $this, 'get_products' ), 5 );
+
+		add_action( 'woocommerce_before_order_item_object_save', array( $this, 'set_item_qty' ), 10, 2 );
 	}
 
 	public function filter_admin_body_class( $body_class = '' ) {
@@ -53,6 +56,39 @@ class Wholesale_Order extends Admin {
 		wp_enqueue_script( 'zao-woocommerce-wholesale', ZWOOWH_URL . "/assets/js/zao-woocommerce-wholesale{$min}.js", array(), ZWOOWH_VERSION, true );
 		wp_localize_script( 'zao-woocommerce-wholesale', 'ZWOOWH', apply_filters( 'zao_woocommerce_wholesale_l10n', array(
 			'is_wholesale' => wp_create_nonce( __FILE__ ),
+			'allProducts' => include_once ZWOOWH_INC . 'dummy-products.php',
+			'columns'      => array(
+				array(
+					'name' => 'img',
+					'title' => 'Thumb',
+					'filter' => false,
+				),
+				array(
+					'name' => 'sku',
+					'title' => 'SKU',
+				),
+				array(
+					'name' => 'parent',
+					'title' => 'Parent',
+				),
+				array(
+					'name' => 'name',
+					'title' => 'Name/Variation',
+				),
+				array(
+					'name' => 'price',
+					'title' => 'Price',
+				),
+				array(
+					'name' => 'type',
+					'title' => 'Type',
+				),
+				array(
+					'name' => 'qty',
+					'title' => 'Quantity',
+					'filter' => false,
+				),
+			),
 		) ) );
 	}
 
@@ -78,4 +114,32 @@ class Wholesale_Order extends Admin {
 		$query->set( 'role', 'wc_wholesaler' );
 	}
 
+	/**
+	 * Use the hacked together order item array keys to determine the line item quantities.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param WC_Order_Item_Product  $order_item_product
+	 * @param object  $data_store
+	 */
+	public function set_item_qty( $order_item_product, $data_store ) {
+		if ( empty( $_REQUEST['item_to_add'] ) ) {
+			return;
+		}
+
+		$old_qty = $order_item_product->get_quantity( 'edit' );
+		$product_id = absint( $order_item_product->get_product_id( 'edit' ) );
+
+		foreach ( $_REQUEST['item_to_add'] as $key => $prod_id_to_check ) {
+			if (
+				absint( $prod_id_to_check ) !== $product_id
+				|| 0 !== strpos( $key, $product_id . ':' ) ) {
+				continue;
+			}
+
+			$new_qty = absint( str_replace( $product_id . ':', '', $key ) );
+			$order_item_product->set_quantity( $new_qty );
+			break;
+		}
+	}
 }

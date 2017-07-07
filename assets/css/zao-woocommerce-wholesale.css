@@ -44,9 +44,6 @@
 .init-wholesale-order .metabox-holder .postbox-container .empty-container {
   border: 0; }
 
-.init-wholesale-order #zwoowh {
-  display: none; }
-
 .build-wholesale-order .postbox:not(#woocommerce-order-items):not(:active):not(:focus):not(:hover) {
   opacity: .3; }
 
