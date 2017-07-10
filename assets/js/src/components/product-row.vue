@@ -19,27 +19,27 @@
 				return 'quantities['+ this.sku +']';
 			},
 
-			formattedPrice: function() {
+			formattedPrice() {
 				return parseFloat( this.price ).toFixed(2);
 			},
 
-			minStock: function() {
+			minStock() {
 				return this.stock ? parseInt( this.stock, 10 ) : 0;
 			},
 
-			isDisabled: function() {
+			isDisabled() {
 				return ! this.stock && ! this.qty;
 			}
 		},
 
 		methods: {
-			doTypeSearch: function( evt ) {
+			doTypeSearch( evt ) {
 				ZWOOWH.vEvent.$emit( 'doSearch', this.type );
 			},
-			doParentSearch: function( evt ) {
+			doParentSearch( evt ) {
 				ZWOOWH.vEvent.$emit( 'doSearch', this.parent );
 			},
-			updateQty: function( evt ) {
+			updateQty( evt ) {
 				ZWOOWH.vEvent.$emit( 'updateQty', this.sku, evt.target.value );
 			}
 		}

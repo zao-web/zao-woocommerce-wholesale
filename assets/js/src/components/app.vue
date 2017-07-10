@@ -1,11 +1,11 @@
 <style>
-	.red {
+	/*.red {
 		color: #f00;
 		padding: 0 190px 10px;
 		position: absolute;
 		top: 400px;
 		left: 0;
-	}
+	}*/
 
 	.zwoowh-products {
 		overflow-y: scroll;
@@ -51,7 +51,7 @@
 </style>
 
 <template>
-	<div id="zwoowh" ref="hmmm">
+	<div id="zwoowh">
 		<!-- <div class="red">
 			<p class="description">modalOpen is {{ modalOpen }}</p>
 			<button @click="toggleModal" class="button-secondary">{{btnText}}</button>
