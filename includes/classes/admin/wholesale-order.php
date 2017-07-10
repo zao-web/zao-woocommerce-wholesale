@@ -24,6 +24,9 @@ class Wholesale_Order extends Admin {
 	}
 
 	public function init() {
+
+		add_action( 'woocommerce_product_options_pricing', array( $this, 'add_wholesale_margin_input' ) );
+
 		if ( ! $this->is_wholesale ) {
 			return;
 		}
@@ -36,9 +39,8 @@ class Wholesale_Order extends Admin {
 		add_action( 'admin_footer'         , array( $this, 'add_app' ) );
 		add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'add_help' ) );
 
-		// Add wholesale order meta
-		// woocommerce_get_price_excluding_tax <-- filter based on data, check did_action/current_action wp_ajax_woocommerce_add_order_item
-		//
+		add_filter( 'woocommerce_get_price_excluding_tax', array( $this, 'filter_wholesale_pricing' ), 10, 3 );
+
 		add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
 		// add_action( 'wp_ajax_zwoowh_get_products', array( $this, 'get_products' ), 5 );
 
@@ -109,6 +111,48 @@ class Wholesale_Order extends Admin {
 	public function maybe_limit_user_search_to_wholesalers() {
 		add_action( 'pre_get_users', array( $this, 'limit_user_search_to_wholesalers' ) );
 	}
+
+	/**
+	 * Filters product price in admin when adding items to the cart.
+	 *
+	 * @param  [type] $price    [description]
+	 * @param  [type] $quantity [description]
+	 * @param  [type] $product  [description]
+	 * @return [type]           [description]
+	 */
+	public function filter_wholesale_pricing( $price, $quantity, $product ) {
+
+		if ( ! is_admin() || ! current_user_can( 'publish_shop_orders' ) ) {
+			return $price;
+		}
+
+		if ( ! doing_action( 'wp_ajax_woocommerce_add_order_item' ) ) {
+			return $price;
+		}
+
+		$margin = $product->get_meta( 'wholesale_margin' );
+
+
+
+	}
+
+	/**
+	 * Adds wholesale margin input to products.
+	 *
+	 * @return [type] [description]
+	 */
+	public function add_wholesale_margin_input() {
+		global $product_object;
+
+		woocommerce_wp_text_input( array(
+			'id'          => '_zwoowh_wholesale_margin',
+			'value'       => $product_object->get_meta( 'wholesale_margin', true, 'edit' ),
+			'label'       => __( 'Wholesale margin', 'zwoowh' ),
+			'description' => '<br />Add your wholesale margin. For example, if you have a $100 product, and sell it wholesale for $50, this value should be "2".',
+		) );
+	}
+
+	public function
 
 	public function limit_user_search_to_wholesalers( $query ) {
 		$query->set( 'role', 'wc_wholesaler' );
