@@ -180,6 +180,7 @@ exports.default = {
 				}
 
 				product.qty = qty;
+				console.warn('product', this.toJSON(product));
 			}
 		},
 		removeOutOfStock: function removeOutOfStock() {
@@ -204,18 +205,10 @@ exports.default = {
 				return;
 			}
 
-			var names = products.map(function (product) {
-				var title = product.name;
-				if (product.parent) {
-					title = product.parent + ' (' + title + ')';
-				}
-				return product.qty + ' of ' + title + ' (' + product.id + ')';
-			});
-
-			alert('Adding ' + names.join(', '));
-
 			this.search = '';
 			this.clearQuantities();
+
+			ZWOOWH.vEvent.$emit('productsSelected', products);
 		},
 		clearQuantities: function clearQuantities() {
 			for (var i = 0; i < this.products.length; i++) {
@@ -337,6 +330,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.vEvent = new Vue();
 
 		app.vEvent.$on('modalOpened', app.resizeTable);
+		app.vEvent.$on('productsSelected', app.addProducts);
 
 		app.prepareProducts(function () {
 
@@ -428,7 +422,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 		$.ajax(params);
 	};
 
-	app.getVariantProducts = function (completeCb) {
+	app.prepareProducts = function (completeCb) {
 		var url = app.rest_url + 'wc/v2/products?status=publish&type=variable&per_page=100&_wpnonce=1&_wpnonce=' + app.rest_nonce;
 		if (app.productCategory > 0) {
 			url += '&category=' + app.productCategory;
@@ -471,16 +465,6 @@ window.ZWOOWH = window.ZWOOWH || {};
 		$.ajax(params);
 	};
 
-	app.prepareProducts = function (completeCb) {
-		app.getVariantProducts(completeCb);
-		// if ( 1 === 1 ) {
-		// 	return;
-		// }
-		// app.allProducts.map( app.prepareProduct );
-
-		// completeCb();
-	};
-
 	app.prepareProduct = function (product) {
 		// var getRandom = (min, max) => Math.random() * (max - min) + min;
 		_.defaults(product, {
@@ -503,6 +487,38 @@ window.ZWOOWH = window.ZWOOWH || {};
 		return product;
 	};
 
+	app.addProducts = function (products) {
+		var order_items = {};
+
+		// TODO figure out why qty parameter is emtpy.
+		//
+		//
+		//
+		//
+		//
+		//
+		var names = products.map(function (product) {
+			console.warn('product', JSON.parse(JSON.stringify(product)));
+			var title = product.name;
+			if (product.parent) {
+				title = product.parent + ' (' + title + ')';
+			}
+			order_items[product.id + ':' + product.qty] = product.id;
+			return product.qty + ' of ' + title + ' (' + product.id + ')';
+		});
+
+		window.alert('Adding ' + names.join(', '));
+
+		console.warn('order_items', order_items);
+
+		// to add items to Woo items metabox:
+		app.$.body.trigger('wc_backbone_modal_response', ['wc-modal-add-products', {
+			add_order_items: order_items
+		}]);
+
+		app.vEvent.$emit('modalClose');
+	};
+
 	app.init = function () {
 		app.cache();
 
@@ -521,9 +537,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 		app.initVue(function () {
 			console.warn('Products initiated.');
-			// window.setTimeout( function() {
-			// 	app.vEvent.$emit( 'modalOpen' );
-			// }, 150 );
+			window.setTimeout(function () {
+				app.vEvent.$emit('modalOpen');
+			}, 150);
 		});
 
 		// to add items to Woo items metabox:
@@ -616,7 +632,6 @@ exports.default = {
 			ZWOOWH.vEvent.$emit('updateQty', this.id, evt.target.value);
 		},
 		removeOutOfStock: function removeOutOfStock() {
-			console.warn('removeOutOfStock');
 			ZWOOWH.vEvent.$emit('removeOutOfStock');
 		}
 	}

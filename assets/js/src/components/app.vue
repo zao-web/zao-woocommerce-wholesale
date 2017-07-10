@@ -280,6 +280,7 @@
 					}
 
 					product.qty = qty;
+					console.warn('product', this.toJSON( product ));
 				}
 			},
 
@@ -304,18 +305,10 @@
 					return;
 				}
 
-				var names = products.map( function( product ) {
-					var title = product.name;
-					if ( product.parent ) {
-						title = product.parent + ' ('+ title +')'
-					}
-					return product.qty + ' of ' + title + ' ('+ product.id +')';
-				} );
-
-				alert( 'Adding ' + names.join( ', ' ) );
-
 				this.search = '';
 				this.clearQuantities();
+
+				ZWOOWH.vEvent.$emit( 'productsSelected', products );
 			},
 
 			clearQuantities() {
