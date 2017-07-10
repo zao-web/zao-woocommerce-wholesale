@@ -26,6 +26,7 @@ class Wholesale_Order extends Admin {
 	public function init() {
 
 		add_action( 'woocommerce_product_options_pricing', array( $this, 'add_wholesale_margin_input' ) );
+		add_action( 'woocommerce_process_product_meta'   , array( $this, 'save_wholesale_margin' ) );
 
 		if ( ! $this->is_wholesale ) {
 			return;
@@ -40,6 +41,7 @@ class Wholesale_Order extends Admin {
 		add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'add_help' ) );
 
 		add_filter( 'woocommerce_get_price_excluding_tax', array( $this, 'filter_wholesale_pricing' ), 10, 3 );
+		add_action( 'woocommerce_process_shop_order_meta', array( $this, 'save_wholesale_order_meta' ) );
 
 		add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
 		// add_action( 'wp_ajax_zwoowh_get_products', array( $this, 'get_products' ), 5 );
@@ -134,7 +136,7 @@ class Wholesale_Order extends Admin {
 	 * @return [type]           [description]
 	 */
 	public function filter_wholesale_pricing( $price, $quantity, $product ) {
-
+		
 		if ( ! is_admin() || ! current_user_can( 'publish_shop_orders' ) ) {
 			return $price;
 		}
@@ -145,8 +147,19 @@ class Wholesale_Order extends Admin {
 
 		$margin = $product->get_meta( 'wholesale_margin' );
 
+		if ( $margin ) {
+			return $price / $margin;
+		}
 
+		return $price;
 
+	}
+
+	public function save_wholesale_order_meta( $post_id ) {
+		$product = wc_get_product( $post_id );
+
+		$product->add_meta_data( 'is_wholesale_order', true );
+		$product->save_meta_data();
 	}
 
 	/**
@@ -165,7 +178,12 @@ class Wholesale_Order extends Admin {
 		) );
 	}
 
-	public function
+	public function save_wholesale_margin( $post_id ) {
+		$product = wc_get_product( $post_id );
+
+		$product->update_meta_data( 'wholesale_margin', floatval( $_POST['_zwoowh_wholesale_margin'] ) );
+		$product->save_meta_data();
+	}
 
 	public function limit_user_search_to_wholesalers( $query ) {
 		$query->set( 'role', 'wc_wholesaler' );
