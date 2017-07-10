@@ -52,8 +52,11 @@ class Wholesale_Order extends Admin {
 		wp_enqueue_style( 'zao-woocommerce-wholesale', ZWOOWH_URL . "/assets/css/zao-woocommerce-wholesale{$min}.css", array(), ZWOOWH_VERSION );
 		wp_enqueue_script( 'zao-woocommerce-wholesale', ZWOOWH_URL . "/assets/js/zao-woocommerce-wholesale{$min}.js", array(), ZWOOWH_VERSION, true );
 		wp_localize_script( 'zao-woocommerce-wholesale', 'ZWOOWH', apply_filters( 'zao_woocommerce_wholesale_l10n', array(
+			'rest_url' => rest_url(),
+			'rest_nonce' => wp_create_nonce( 'wp_rest' ),
 			'is_wholesale' => wp_create_nonce( __FILE__ ),
-			'allProducts' => include_once ZWOOWH_INC . 'dummy-products.php',
+			'allProducts' => array(),
+			'productCategory' => 0,
 			'columns'      => array(
 				array(
 					'name' => 'img',
@@ -85,6 +88,16 @@ class Wholesale_Order extends Admin {
 					'title' => 'Quantity',
 					'filter' => false,
 				),
+			),
+			'l10n' => array(
+				'somethingWrong'       => __( 'Something went wrong and we were not able to retrieve the wholesale products.', 'zwoowh' ),
+				'noStockTitle'         => __( 'This item is out of stock.', 'zwoowh' ),
+				'addProductsBtn'       => __( 'Add Products', 'zwoowh' ),
+				'clearBtn'             => __( 'Clear', 'zwoowh' ),
+				'selectProductsTitle'  => __( 'Select Products', 'zwoowh' ),
+				'variantProductsTitle' => __( 'Variant Products', 'zwoowh' ),
+				'typesTitle'           => __( 'Types', 'zwoowh' ),
+				'searchPlaceholder'    => __( 'Filter products by id, sku, name, parent, price, etc', 'zwoowh' ),
 			),
 		) ) );
 	}
