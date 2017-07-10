@@ -10,10 +10,7 @@ module.exports = {
 			' | <%= pkg.homepage %>' +
 			' | Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>' +
 			' | Licensed <%= pkg.license %>' +
-			' */\n',
-			mangle: {
-				except: ['jQuery', 'Vue']
-			}
+			' */\n'
 		}
 	}
 };

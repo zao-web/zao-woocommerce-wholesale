@@ -78,31 +78,182 @@ window.ZWOOWH = window.ZWOOWH || {};
 		}
 	};
 
-	app.initVue = function() {
+	app.initVue = function( completeCb ) {
 		if ( app.vEvent ) {
 			return;
 		}
 
 		var Vue = require( 'vue' );
-		var vueApp = require( './app.vue' );
-
 		app.vEvent = new Vue();
 
-		app.vueInstance = new Vue( {
-			el: '#zwoowh',
-			// data: data
-			render: function ( createElement ) {
-				return createElement( vueApp );
+		app.vEvent.$on( 'modalOpened', app.resizeTable );
+
+		app.prepareProducts( function() {
+
+			var vueApp = require( './app.vue' );
+
+			app.vueInstance = new Vue( {
+				el: '#zwoowh',
+				data() {
+					return {
+						modalOpen        : false,
+						btnText          : 'Click Me',
+						sortKey          : 'type',
+						reverse          : false,
+						excludeUnstocked : false,
+						search           : '',
+						columns          : app.columns,
+						products         : app.allProducts,
+					};
+				},
+				// data: data
+				render: function ( createElement ) {
+					return createElement( vueApp );
+				}
+			} );
+
+			app.$.addItem
+				.removeClass( 'add-order-item' )
+				.addClass( 'add-wholesale-order-items' )
+				.on( 'click', function() {
+					app.vEvent.$emit( 'modalOpen' );
+				} );
+
+			if ( _.isFunction( completeCb ) ) {
+				completeCb();
 			}
 		} );
 
-		app.$.addItem
-			.removeClass( 'add-order-item' )
-			.addClass( 'add-wholesale-order-items' )
-			.on( 'click', function() {
-				app.vEvent.$emit( 'modalOpen' );
-			} );
+	};
 
+	app.resizeTable = function() {
+		app.$.tHead = app.$.tHead || $( '#zwoowh-modal .zwoowh-content .table-head' );
+		app.$.productsTable = app.$.productsTable || $( '#zwoowh-modal .zwoowh-products' );
+		app.$.modalContent = app.$.modalContent || $( '#zwoowh-modal .media-frame-content');
+
+		var thH = app.$.tHead.outerHeight();
+		var contentH = app.$.modalContent.outerHeight();
+
+		app.$.productsTable.css( { 'max-height': contentH - ( thH * 3 ) } );
+	};
+
+	app.getProductVariations = function( parentProduct, completeCb ) {
+		var url = app.rest_url + 'wc/v2/products/' + parentProduct.id +'/variations/?bt_limit_fields=id,img:50,sku,name,price,bt_product_type,stock_quantity,editlink&_wpnonce=' + app.rest_nonce;
+
+		var params = {
+			type: 'GET',
+			url: url,
+			success: function( response ) {
+				// console.warn('wc api variant response', response);
+
+				for ( var i = 0; i < response.length; i++ ) {
+					response[i].parent = parentProduct.name;
+					var product = app.prepareProduct( response[i] );
+
+					// console.warn('product', JSON.parse( JSON.stringify( product ) ));
+					app.allProducts.push( product );
+				}
+
+				app.toProcess--;
+
+				if ( app.toProcess < 1 ) {
+					completeCb();
+				}
+				// for ( var i = 0; i < response.length; i++ ) {
+				// 	console.warn('response['+ i +']', response[i]);
+				// }
+			},
+			error: function( jqXHR, textStatus, errorThrown ) {
+				app.toProcess--;
+				let err = jqXHR.responseJSON;
+				if ( err.code && err.message ) {
+					console.error( jqXHR.status + ' ' + err.code + ' - ' + err.message );
+				} else {
+					console.error( app.l10n.somethingWrong );
+				}
+				// console.error('wc api response error', {
+				// 	jqXHR, textStatus, errorThrown
+				// });
+			},
+		};
+		// console.warn('params', params);
+
+		$.ajax( params );
+	};
+
+	app.getVariantProducts = function( completeCb ) {
+		var url = app.rest_url + 'wc/v2/products?status=publish&type=variable&per_page=100&_wpnonce=1&_wpnonce=' + app.rest_nonce;
+		if ( app.productCategory > 0 ) {
+			url += '&category='+ app.productCategory;
+		}
+
+		// $url = '/wc/v2/products';
+		// $request = new WP_REST_Request( 'GET', $url );
+		// $request['_wpnonce'] = wp_create_nonce( 'wp_rest' );
+		// $request['status'] = 'publish';
+		// $request['bt_product_type'] = '195';
+		// $request['type'] = 'variable';
+
+		var params = {
+			type: 'GET',
+			url: url,
+			success: function( response ) {
+				// app.allProducts = [];
+				app.toProcess = response.length;
+
+				// console.warn('wc api response', response);
+					for ( var i = 0; i < response.length; i++ ) {
+						// console.warn('response['+ i +']', response[i]);
+						app.getProductVariations( response[i], completeCb );
+					}
+			},
+			error: function( jqXHR, textStatus, errorThrown ) {
+				let err = jqXHR.responseJSON;
+				if ( err.code && err.message ) {
+					window.alert( jqXHR.status + ' ' + err.code + ' - ' + err.message );
+				} else {
+					window.alert( app.l10n.somethingWrong );
+				}
+				console.error('wc api response error', {
+					jqXHR, textStatus, errorThrown
+				});
+			},
+		};
+		// console.warn('params', params);
+
+		$.ajax( params );
+	};
+
+	app.prepareProducts = function( completeCb ) {
+		app.getVariantProducts( completeCb );
+		// if ( 1 === 1 ) {
+		// 	return;
+		// }
+		// app.allProducts.map( app.prepareProduct );
+
+		// completeCb();
+	};
+
+	app.prepareProduct = function( product ) {
+		// var getRandom = (min, max) => Math.random() * (max - min) + min;
+		_.defaults( product, {
+			id             : 0,
+			img            : '',
+			sku            : '',
+			parent         : '',
+			name           : '',
+			price          : 0,
+			type           : '',
+			qty            : '',
+			editlink       : '',
+			stock_quantity : 0,
+		} );
+
+		// product.img = product.img ? product.img : 'https://via.placeholder.com/50x50';
+		product.stock_quantity = parseInt( product.stock_quantity, 10 );
+		product.price = product.price ? parseFloat( product.price ) : 0;
+
+		return product;
 	};
 
 	app.init = function() {
@@ -120,6 +271,13 @@ window.ZWOOWH = window.ZWOOWH || {};
 				app.step3();
 			}
 		} );
+
+		app.initVue( function() {
+			console.warn('Products initiated.');
+			// window.setTimeout( function() {
+			// 	app.vEvent.$emit( 'modalOpen' );
+			// }, 150 );
+		});
 
 		// to add items to Woo items metabox:
 		// app.$.body.trigger( 'wc_backbone_modal_response', [ 'wc-modal-add-products', {

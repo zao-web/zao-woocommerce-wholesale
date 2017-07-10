@@ -1,5 +1,5 @@
 <style>
-	/*.red {
+	/*.test {
 		color: #f00;
 		padding: 0 190px 10px;
 		position: absolute;
@@ -52,21 +52,21 @@
 
 <template>
 	<div id="zwoowh">
-		<!-- <div class="red">
+		<!-- <div class="test">
 			<p class="description">modalOpen is {{ modalOpen }}</p>
-			<button @click="toggleModal" class="button-secondary">{{btnText}}</button>
+			<button @click="openModal" class="button-secondary">{{btnText}}</button>
 		</div> -->
 		<modal v-show="modalOpen">
-			<template slot="title">Select Products</template>
+			<template slot="title">{{ selectProductsTitle }}</template>
 			<template slot="menu">
-				<h5 class="zwoowh-filter-title">Variant Products</h5>
+				<h5 class="zwoowh-filter-title">{{ variantProductsTitle }}</h5>
 				<a v-for="parent in productParents" @click.self.prevent="search = parent" href="#">{{ parent }}</a>
 				<div class="separator"></div>
-				<h5 class="zwoowh-filter-title">Types</h5>
+				<h5 class="zwoowh-filter-title">{{ typesTitle }}</h5>
 				<a v-for="type in productTypes" @click.self.prevent="search = type" href="#">{{ type }}</a>
 			</template>
 			<template slot="router">
-				<input v-model="search" class="large-text" type="search" id="search-products" placeholder="Filter products by sku, name, parent, price, etc" required>
+				<input v-model="search" class="large-text" type="search" id="search-products" :placeholder="searchPlaceholder" required>
 			</template>
 
 			<form id="quantities-form">
@@ -96,7 +96,8 @@
 							:parent="product.parent"
 							:type="product.type"
 							:qty="product.qty"
-							:stock="product.stock"
+							:editlink="product.editlink"
+							:stock="product.stock_quantity"
 							></tr>
 						</tbody>
 					</table>
@@ -116,8 +117,8 @@
 			</form>
 
 			<template slot="addBtn">
-				<button type="button" class="button media-button button-primary button-large media-button-insert" @click.self.prevent="addProducts()" :disabled="hasSelected()">Add Products</button>
-				<button type="reset" class="button media-button button-secondary button-large" @click="clearQuantities()">Clear</button>
+				<button type="button" class="button media-button button-primary button-large media-button-insert" @click.self.prevent="addProducts()" :disabled="hasSelected()">{{ btnText }}</button>
+				<button type="reset" class="button media-button button-secondary button-large" @click="clearQuantities()">{{ clearBtn }}</button>
 			</template>
 		</modal>
 	</div>
@@ -133,49 +134,35 @@
 			Modal,
 			ProductRow
 		},
-		beforeCreate() {
-			var getRandom = (min, max) => Math.random() * (max - min) + min;
-
-			ZWOOWH.allProducts.map( function( product ) {
-				_.defaults( product, {
-					id     : 0,
-					img    : '',
-					sku    : '',
-					parent : '',
-					name   : '',
-					price  : 0,
-					type   : '',
-					qty    : '',
-					stock  : getRandom( 0, 200 ), // Testing
-				} );
-
-				// product.img = product.img ? product.img : 'https://via.placeholder.com/50x50';
-				product.stock = parseInt( product.stock, 10 );
-				product.price = product.price ? parseFloat( product.price ) : 0;
-			} );
-		},
 		created() {
 			ZWOOWH.vEvent
 				.$on( 'modalClose', this.closeModal )
 				.$on( 'modalOpen', this.openModal )
-				.$on( 'toggleOpen', this.toggleModal )
 				.$on( 'doSearch', this.doSearch )
-				.$on( 'updateQty', this.updateQty );
-
+				.$on( 'updateQty', this.updateQty )
+				.$on( 'removeOutOfStock', this.removeOutOfStock );
 		},
 		data() {
 			return {
-				modalOpen : false,
-				btnText: 'Click Me',
-				sortKey: 'type',
-				reverse: false,
-				search: '',
-				columns: ZWOOWH.columns,
-				products: ZWOOWH.allProducts,
+				modalOpen            : false,
+				sortKey              : 'type',
+				reverse              : false,
+				excludeUnstocked     : false,
+				search               : '',
+				columns              : ZWOOWH.columns,
+				products             : ZWOOWH.allProducts,
+				btnText              : ZWOOWH.l10n.addProductsBtn,
+				clearBtn             : ZWOOWH.l10n.clearBtn,
+				variantProductsTitle : ZWOOWH.l10n.variantProductsTitle,
+				selectProductsTitle  : ZWOOWH.l10n.selectProductsTitle,
+				typesTitle           : ZWOOWH.l10n.typesTitle,
 			}
 		},
 
 		computed: {
+			searchPlaceholder() {
+				return ZWOOWH.l10n.searchPlaceholder
+			},
 			productParents() {
 				var cats = {};
 				for (var i = 0; i < this.products.length; i++) {
@@ -211,20 +198,23 @@
 		methods : {
 			closeModal() {
 				this.modalOpen = false;
+				setTimeout( () => ZWOOWH.vEvent.$emit( 'modalClosed' ), 100 );
 			},
 			openModal() {
 				this.modalOpen = true;
+				setTimeout( () => ZWOOWH.vEvent.$emit( 'modalOpened' ), 100 );
 			},
-			toggleModal() {
-				this.modalOpen = ! this.modalOpen;
-			},
+			hasStock    : ( product ) => product.stock_quantity > 0,
+			hasQty      : ( product ) => product.qty > 0,
 
 			filter() {
-				if ( ! this.search ) {
-					return this.products;
+				var results = this.searchResults( this.search );
+
+				if ( this.excludeUnstocked ) {
+					results = results.filter( this.hasStock );;
 				}
 
-				return this.searchResults( this.search );
+				return results;
 			},
 
 			doSearch( search ) {
@@ -232,6 +222,9 @@
 			},
 
 			searchResults( search ) {
+				if ( ! search ) {
+					return this.products;
+				}
 				var self = this;
 				var i = 0;
 				search = self.toLowerString( search );
@@ -275,33 +268,33 @@
 				this.sortKey = sortKey;
 			},
 
-			updateQty( sku, qty ) {
+			updateQty( id, qty ) {
 				qty = qty.trim ? qty.trim() : qty;
 				qty = parseInt( qty, 10 );
 				if ( ! isNaN( qty ) ) {
 					var product = this.products.find( function( product ) {
-						return sku === product.sku;
+						return id === product.id;
 					} );
-					if ( qty > product.stock ) {
-						qty = product.stock;
+					if ( qty > product.stock_quantity ) {
+						qty = product.stock_quantity;
 					}
 
 					product.qty = qty;
 				}
 			},
 
-			toJSON( data ) {
-				return JSON.parse( JSON.stringify( data ) );
+			removeOutOfStock() {
+				this.excludeUnstocked = true;
 			},
+
+			toJSON: ( data ) => JSON.parse( JSON.stringify( data ) ),
 
 			hasSelected() {
 				return this.selectedProducts().length ? false : true;
 			},
 
 			selectedProducts() {
-				return this.products.filter( function( product ) {
-					return product.qty;
-				} );
+				return this.products.filter( this.hasQty );
 			},
 
 			addProducts() {

@@ -10,12 +10,15 @@
 	"boss"      : true,
 	"eqnull"    : true,
 	"validthis" : true,
-	"globals": {
-		"exports"  : true,
-		"module"   : false,
-		"console"  : true,
-		"document" : true,
-		"require"  : true,
-		"window"   : true
+	"browser"   : true,
+	"esversion" : 6,
+	"globals"   : {
+		"exports"   : true,
+		"module"    : false,
+		"require"   : true,
+		"_"         : true,
+		"postboxes" : true,
+		"console"   : true,
+		"jQuery"    : true
 	}
 }
