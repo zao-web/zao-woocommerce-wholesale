@@ -66,7 +66,6 @@
 				ZWOOWH.vEvent.$emit( 'updateQty', this.id, evt.target.value );
 			},
 			removeOutOfStock() {
-				console.warn('removeOutOfStock');
 				ZWOOWH.vEvent.$emit( 'removeOutOfStock' );
 			}
 		}
