@@ -1,11 +1,11 @@
 <style>
-	.red {
+	/*.red {
 		color: #f00;
 		padding: 0 190px 10px;
 		position: absolute;
 		top: 400px;
 		left: 0;
-	}
+	}*/
 
 	.zwoowh-products {
 		overflow-y: scroll;
@@ -51,7 +51,7 @@
 </style>
 
 <template>
-	<div id="zwoowh" ref="hmmm">
+	<div id="zwoowh">
 		<!-- <div class="red">
 			<p class="description">modalOpen is {{ modalOpen }}</p>
 			<button @click="toggleModal" class="button-secondary">{{btnText}}</button>
@@ -88,6 +88,7 @@
 							is="product-row"
 							v-for="(product, index) in orderedProducts"
 							:index="index"
+							:id="product.id"
 							:img="product.img"
 							:sku="product.sku"
 							:name="product.name"
@@ -132,6 +133,27 @@
 			Modal,
 			ProductRow
 		},
+		beforeCreate() {
+			var getRandom = (min, max) => Math.random() * (max - min) + min;
+
+			ZWOOWH.allProducts.map( function( product ) {
+				_.defaults( product, {
+					id     : 0,
+					img    : '',
+					sku    : '',
+					parent : '',
+					name   : '',
+					price  : 0,
+					type   : '',
+					qty    : '',
+					stock  : getRandom( 0, 200 ), // Testing
+				} );
+
+				// product.img = product.img ? product.img : 'https://via.placeholder.com/50x50';
+				product.stock = parseInt( product.stock, 10 );
+				product.price = product.price ? parseFloat( product.price ) : 0;
+			} );
+		},
 		created() {
 			ZWOOWH.vEvent
 				.$on( 'modalClose', this.closeModal )
@@ -140,12 +162,6 @@
 				.$on( 'doSearch', this.doSearch )
 				.$on( 'updateQty', this.updateQty );
 
-			var self = this;
-			this.products.map( function( product ) {
-				// product.img = product.img ? product.img : 'https://via.placeholder.com/50x50';
-				product.stock = parseInt( product.stock ? product.stock : self.getRandom( 0, 200 ), 10 );
-				product.price = product.price ? parseFloat( product.price ) : 0;
-			} );
 		},
 		data() {
 			return {
@@ -193,9 +209,6 @@
 		},
 
 		methods : {
-			getRandom( min, max) {
-			  return Math.random() * (max - min) + min;
-			},
 			closeModal() {
 				this.modalOpen = false;
 			},
@@ -303,7 +316,7 @@
 					if ( product.parent ) {
 						title = product.parent + ' ('+ title +')'
 					}
-					return product.qty + ' of ' + title;
+					return product.qty + ' of ' + title + ' ('+ product.id +')';
 				} );
 
 				alert( 'Adding ' + names.join( ', ' ) );

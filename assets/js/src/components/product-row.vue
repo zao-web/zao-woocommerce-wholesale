@@ -6,40 +6,42 @@
 		<td class="name">{{ name }}</td>
 		<td class="price">${{ formattedPrice }}</td>
 		<td class="type"><a @click.self.prevent="doTypeSearch" href="#">{{ type }}</a></td>
-		<td class="qty"><input size="3" @input.self.prevent="updateQty" :id="sku" :name="qtyName" :disabled="isDisabled" :value="qty" type="number" step="1" min="0" pattern="[0-9]"/> of {{ minStock }}</td>
+		<td class="qty">
+			<input size="3" @input.self.prevent="updateQty" :id="sku" :name="qtyName" :disabled="isDisabled" :value="qty" type="number" step="1" min="0" pattern="[0-9]"/> of {{ minStock }}
+		</td>
 	</tr>
 </template>
 
 <script>
 	export default {
-		props: [ 'img', 'sku', 'name', 'price', 'parent', 'type', 'qty', 'stock' ],
+		props: [ 'id', 'img', 'sku', 'name', 'price', 'parent', 'type', 'qty', 'stock' ],
 
 		computed: {
-			qtyName: function() {
-				return 'quantities['+ this.sku +']';
+			qtyName() {
+				return `quantities[${this.id}][${this.sku}]`;
 			},
 
-			formattedPrice: function() {
+			formattedPrice() {
 				return parseFloat( this.price ).toFixed(2);
 			},
 
-			minStock: function() {
+			minStock() {
 				return this.stock ? parseInt( this.stock, 10 ) : 0;
 			},
 
-			isDisabled: function() {
+			isDisabled() {
 				return ! this.stock && ! this.qty;
 			}
 		},
 
 		methods: {
-			doTypeSearch: function( evt ) {
+			doTypeSearch( evt ) {
 				ZWOOWH.vEvent.$emit( 'doSearch', this.type );
 			},
-			doParentSearch: function( evt ) {
+			doParentSearch( evt ) {
 				ZWOOWH.vEvent.$emit( 'doSearch', this.parent );
 			},
-			updateQty: function( evt ) {
+			updateQty( evt ) {
 				ZWOOWH.vEvent.$emit( 'updateQty', this.sku, evt.target.value );
 			}
 		}
