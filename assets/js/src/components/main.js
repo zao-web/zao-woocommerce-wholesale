@@ -55,12 +55,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 		app.$.addItems.trigger( 'click' );
 
-		app.initVue( function() {
-			if ( app.currStep > 1 && app.vueInstance ) {
-				app.vEvent.$emit( 'modalOpen' );
-			}
-		} );
-
+		if ( app.currStep > 1 && app.vueInstance ) {
+			app.vEvent.$emit( 'modalOpen' );
+		}
 	};
 
 	app.step3 = function() {
@@ -83,20 +80,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 		}
 	};
 
-	app.initVueAndOpen = function( completeCb ) {
-		app.initVue( function() {
-			console.warn('Products initiated.');
-			window.setTimeout( function() {
-				if ( app.currStep > 1 ) {
-					app.vEvent.$emit( 'modalOpen' );
-				}
-			}, 150 );
-		} );
-	};
-
 	app.initVue = function( completeCb ) {
 		if ( app.vEvent ) {
-			return completeCb();
+			return;
 		}
 
 		var Vue = require( 'vue' );
@@ -118,6 +104,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 			} );
 
 		app.prepareProducts( function() {
+			if ( app.vueInstance ) {
+				return;
+			}
 
 			var vueApp = require( './app.vue' );
 
@@ -188,9 +177,10 @@ window.ZWOOWH = window.ZWOOWH || {};
 			},
 			error: function( jqXHR, textStatus, errorThrown ) {
 				let err = jqXHR.responseJSON;
-				if ( err.code && err.message ) {
+				if ( err && err.code && err.message ) {
 					window.alert( jqXHR.status + ' ' + err.code + ' - ' + err.message );
 				} else {
+					console.warn('error', { jqXHR, textStatus, errorThrown });
 					window.alert( app.l10n.somethingWrong );
 				}
 			},
@@ -348,12 +338,15 @@ window.ZWOOWH = window.ZWOOWH || {};
 	};
 
 	app.init = function() {
+		console.warn('ZWOOWH init');
 		app.cache();
 
 		// Pass our wholesale nonce through every ajax call.
 		$.ajaxSetup( { data : { is_wholesale: app.is_wholesale } } );
 
-		app.initVueAndOpen();
+		app.initVue( function() {
+			console.warn('Products initiated.');
+		} );
 
 		app.$.select.on( 'change', app.toggleOrderBoxes );
 
