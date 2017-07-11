@@ -121,7 +121,7 @@
 #zwoowh {
 
 	td, th {
-		width: 19%;
+		width: 26%;
 	}
 
 	td.img,
@@ -131,6 +131,23 @@
 	td.price,
 	th.price {
 		width: 7%;
+	}
+
+	td.qty,
+	th.qty {
+		width: 12%;
+	}
+
+	td.type,
+	th.type {
+		width: 15%;
+	}
+
+	td.name,
+	th.name,
+	td.categories,
+	th.categories {
+		width: 15%;
 	}
 
 	.product-row input {
