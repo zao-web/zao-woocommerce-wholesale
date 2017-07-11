@@ -133,6 +133,7 @@ class Wholesale_Order extends Admin {
 			select.setAttribute( 'data-placeholder', '<?php echo esc_js( __( 'Search for Wholesaler', 'zwoowh' ) ); ?>' );
 			select.style.width = '99%';
 		</script>
+		<input type="hidden" name="is_wholesale" value="1"/>
 		<?php
 	}
 
