@@ -45,22 +45,26 @@ window.ZWOOWH = window.ZWOOWH || {};
 	};
 
 	app.step1 = function() {
+		app.currStep = 1;
 		app.bodyClass( 'init-wholesale-order' );
 	};
 
 	app.step2 = function() {
+		app.currStep = 2;
 		app.bodyClass( 'build-wholesale-order' );
 
 		app.$.addItems.trigger( 'click' );
 
-		app.initVue();
+		app.initVue( function() {
+			if ( app.currStep > 1 && app.vueInstance ) {
+				app.vEvent.$emit( 'modalOpen' );
+			}
+		} );
 
-		window.setTimeout( function() {
-			app.$.addItem.trigger( 'click' );
-		}, 150 );
 	};
 
 	app.step3 = function() {
+		app.currStep = 3;
 		app.bodyClass( 'edit-wholesale-order' );
 	};
 
@@ -79,9 +83,20 @@ window.ZWOOWH = window.ZWOOWH || {};
 		}
 	};
 
+	app.initVueAndOpen = function( completeCb ) {
+		app.initVue( function() {
+			console.warn('Products initiated.');
+			window.setTimeout( function() {
+				if ( app.currStep > 1 ) {
+					app.vEvent.$emit( 'modalOpen' );
+				}
+			}, 150 );
+		} );
+	};
+
 	app.initVue = function( completeCb ) {
 		if ( app.vEvent ) {
-			return;
+			return completeCb();
 		}
 
 		var Vue = require( 'vue' );
@@ -89,15 +104,17 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 		app.vEvent.$on( 'modalOpened', app.resizeTable );
 		app.vEvent.$on( 'productsSelected', app.addProducts );
+		app.vEvent.$on( 'modalOpen', function() {
+			if ( ! app.vueInstance ) {
+				window.alert( app.l10n.plsWait );
+			}
+		} );
 
 		app.$.addItem
 			.removeClass( 'add-order-item' )
 			.addClass( 'add-wholesale-order-items' )
 			.on( 'click', function() {
 				app.vEvent.$emit( 'modalOpen' );
-				if ( ! app.vueInstance ) {
-					window.alert( app.l10n.plsWait );
-				}
 			} );
 
 		app.prepareProducts( function() {
@@ -231,7 +248,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 				}
 				// console.error('wc api response error', {
 				// 	jqXHR, textStatus, errorThrown
-				// });
+				// } );
 			},
 		};
 
@@ -261,6 +278,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 					app.getProductVariations( completeCb );
 				}
+				// else {
+				// 	completeCb();
+				// }
 
 				if ( ! cbCalled ) {
 					cbCalled = true;
@@ -276,7 +296,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 				}
 				console.error('wc api response error', {
 					jqXHR, textStatus, errorThrown
-				});
+				} );
 			},
 		};
 
@@ -330,13 +350,16 @@ window.ZWOOWH = window.ZWOOWH || {};
 	app.init = function() {
 		app.cache();
 
+		// Pass our wholesale nonce through every ajax call.
+		$.ajaxSetup( { data : { is_wholesale: app.is_wholesale } } );
+
+		app.initVueAndOpen();
+
 		app.$.select.on( 'change', app.toggleOrderBoxes );
+
 		setTimeout( function() {
 			app.$.select.select2( 'open' );
 		}, 1000 );
-
-		// Pass our wholesale nonce through every ajax call.
-		$.ajaxSetup( { data : { is_wholesale: app.is_wholesale } } );
 
 		app.$.body.on( 'wc_backbone_modal_response', function( evt, target ) {
 			if ( 'wc-modal-add-products' === target ) {
@@ -344,12 +367,6 @@ window.ZWOOWH = window.ZWOOWH || {};
 			}
 		} );
 
-		app.initVue( function() {
-			console.warn('Products initiated.');
-			// window.setTimeout( function() {
-			// 	app.vEvent.$emit( 'modalOpen' );
-			// }, 150 );
-		});
 	};
 
 	$( app.init );
