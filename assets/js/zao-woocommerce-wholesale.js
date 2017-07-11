@@ -363,6 +363,13 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.vEvent.$on('modalOpened', app.resizeTable);
 		app.vEvent.$on('productsSelected', app.addProducts);
 
+		app.$.addItem.removeClass('add-order-item').addClass('add-wholesale-order-items').on('click', function () {
+			app.vEvent.$emit('modalOpen');
+			if (!app.vueInstance) {
+				window.alert(app.l10n.plsWait);
+			}
+		});
+
 		app.prepareProducts(function () {
 
 			var vueApp = require('./app.vue');
@@ -388,10 +395,6 @@ window.ZWOOWH = window.ZWOOWH || {};
 				render: function render(createElement) {
 					return createElement(vueApp);
 				}
-			});
-
-			app.$.addItem.removeClass('add-order-item').addClass('add-wholesale-order-items').on('click', function () {
-				app.vEvent.$emit('modalOpen');
 			});
 
 			// Let's get some more.
@@ -513,6 +516,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 		// 	return completeCb();
 		// }
 
+		var cbCalled = false;
 		var params = {
 			type: 'GET',
 			url: url,
@@ -525,7 +529,10 @@ window.ZWOOWH = window.ZWOOWH || {};
 					// console.warn('app.left', app.left);
 
 					app.getProductVariations(completeCb);
-				} else {
+				}
+
+				if (!cbCalled) {
+					cbCalled = true;
 					completeCb();
 				}
 			},
@@ -608,9 +615,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 		app.initVue(function () {
 			console.warn('Products initiated.');
-			window.setTimeout(function () {
-				app.vEvent.$emit('modalOpen');
-			}, 150);
+			// window.setTimeout( function() {
+			// 	app.vEvent.$emit( 'modalOpen' );
+			// }, 150 );
 		});
 	};
 

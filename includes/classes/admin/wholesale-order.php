@@ -118,6 +118,7 @@ class Wholesale_Order extends Admin {
 				'typesTitle'           => __( 'Types', 'zwoowh' ),
 				'categoryTitle'        => __( 'Categories', 'zwoowh' ),
 				'searchPlaceholder'    => __( 'Filter products by id, sku, name, parent, price, etc', 'zwoowh' ),
+				'plsWait'              => __( 'Loading Products. Please try again in a second.', 'zwoowh' ),
 			),
 		) );
 
