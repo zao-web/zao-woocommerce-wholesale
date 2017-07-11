@@ -369,7 +369,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			}
 		});
 
-		app.$.addItem.removeClass('add-order-item').addClass('add-wholesale-order-items').on('click', function () {
+		app.$.addItem.on('click', function () {
 			app.vEvent.$emit('modalOpen');
 		});
 
@@ -612,6 +612,8 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 		// Pass our wholesale nonce through every ajax call.
 		$.ajaxSetup({ data: { is_wholesale: app.is_wholesale } });
+
+		app.$.addItem.removeClass('add-order-item').addClass('add-wholesale-order-items');
 
 		app.initVue(function () {
 			console.warn('Products initiated.');
