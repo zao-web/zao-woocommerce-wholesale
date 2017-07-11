@@ -1,20 +1,25 @@
-<style>
-	.disabled-row {
-		opacity: .5;
-	}
-</style>
-
 <template>
 	<tr :class="rowClass" :title="noStockTitle">
-		<td class="img"><a :href="editlink"><img v-if="img" :src="img" :alt="name"/></a></td>
+		<td class="img">
+			<a :href="editlink"><img :src="imgSrc" :width="imgWidth" :height="imgHeight" :alt="name"/></a>
+		</td>
 		<td class="sku">{{ sku }}</td>
-		<td class="parent"><a :href="editlink" @click.self.prevent="doParentSearch">{{ parent }}</a></td>
-		<td class="name">{{ name }}</td>
+		<td class="name">
+			<a :href="editlink">{{ name }}</a>
+			<div v-if="parent">
+				Parent: <a :href="editlink" @click.self.prevent="doParentSearch">{{ parent }}</a>
+			</div>
+		</td>
 		<td class="price">${{ formattedPrice }}</td>
 		<td class="type"><a @click.self.prevent="doTypeSearch" href="#">{{ type }}</a></td>
+		<td class="categories">
+			<ul v-if="hasCategories">
+				<li v-for="category in categories"><a @click.self.prevent="doCategorySearch" href="#">{{ category }}</a></li>
+			</ul>
+		</td>
 		<td class="qty">
-			<template v-if="minStock">
-				<input size="3" @input.self.prevent="updateQty" :id="idAttr" :name="qtyName" :disabled="isDisabled" :value="qty" type="number" step="1" min="0" pattern="[0-9]"/> of {{ minStock }}
+			<template v-if="hasStock">
+				<input size="3" @input.self.prevent="updateQty" :id="idAttr" :name="qtyName" :disabled="isDisabled" :value="qty" type="number" step="1" min="0" pattern="[0-9]"/><template v-if="minStock"> of {{ minStock }}</template>
 			</template>
 			<template v-else>
 			  {{ noStockTitle }} <a @click.self.prevent="removeOutOfStock" href="#" class="remove-out-of-stock-button dashicons dashicons-no"></a>
@@ -25,14 +30,26 @@
 
 <script>
 	export default {
-		props: [ 'id', 'img', 'sku', 'name', 'price', 'parent', 'type', 'qty', 'stock', 'editlink' ],
+		props: [ 'id', 'img', 'sku', 'name', 'price', 'parent', 'type', 'qty', 'stock', 'inStock', 'manageStock', 'editlink', 'categories' ],
 
 		computed: {
+			hasCategories() {
+				return this.categories && this.categories.length;
+			},
+			imgSrc() {
+				return this.img && this.img[0] ? this.img[0] : ZWOOWH.placeholderImgSrc;
+			},
+			imgWidth() {
+				return this.img[1] || 40;
+			},
+			imgHeight() {
+				return this.img[2] || 40;
+			},
 			rowClass() {
-				return 'product-row' + ( this.stock > 1 ? '' : ' disabled-row' );
+				return 'product-row' + ( this.hasStock ? '' : ' disabled-row' );
 			},
 			noStockTitle() {
-				return this.stock > 1 ? '' : ZWOOWH.l10n.noStockTitle;
+				return this.hasStock ? '' : ZWOOWH.l10n.noStockTitle;
 			},
 			qtyName() {
 				return `quantities[${this.id}]`;
@@ -42,12 +59,24 @@
 				return parseFloat( this.price ).toFixed(2);
 			},
 
+			hasStock() {
+				if ( this.manageStock ) {
+					return this.inStock && this.stock > 0;
+				}
+
+				return this.inStock ? true : false;
+			},
+
 			minStock() {
-				return this.stock > 1 ? parseInt( this.stock, 10 ) : 0;
+				if ( this.manageStock ) {
+					return this.inStock && this.stock > 0 ? parseInt( this.stock, 10 ) : 0;
+				}
+
+				return 0;
 			},
 
 			isDisabled() {
-				return ! ( this.stock > 1 ) && ! this.qty;
+				return ! ( this.hasStock ) && ! this.qty;
 			},
 
 			idAttr() {
@@ -58,6 +87,9 @@
 		methods: {
 			doTypeSearch() {
 				ZWOOWH.vEvent.$emit( 'doSearch', this.type );
+			},
+			doCategorySearch( evt ) {
+				ZWOOWH.vEvent.$emit( 'doSearch', evt.target.innerText );
 			},
 			doParentSearch() {
 				ZWOOWH.vEvent.$emit( 'doSearch', this.parent );

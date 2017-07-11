@@ -6,48 +6,6 @@
 		top: 400px;
 		left: 0;
 	}*/
-
-	.zwoowh-products {
-		overflow-y: scroll;
-		max-height: 600px;
-	}
-
-	.zwoowh-products .widefat {
-		border-top: 0;
-	}
-
-	#zwoowh td, #zwoowh th {
-		width: 14%;
-	}
-
-	#zwoowh td.img,
-	#zwoowh th.img,
-	#zwoowh td.sku,
-	#zwoowh th.sku,
-	#zwoowh td.price,
-	#zwoowh th.price {
-		width: 7%;
-	}
-
-	.product-row input {
-		width: 5em;
-	}
-
-	.table-head > thead > tr > th {
-		border-bottom: 0;
-	}
-
-	.table-foot > tfoot > tr > th {
-		border-top: 0;
-	}
-
-	.zwoowh-filter-title {
-		display: block;
-		position: relative;
-		padding: 8px 20px;
-		margin: 0;
-		font-size: 14px;
-	}
 </style>
 
 <template>
@@ -57,13 +15,16 @@
 			<button @click="openModal" class="button-secondary">{{btnText}}</button>
 		</div> -->
 		<modal v-show="modalOpen">
-			<template slot="title">{{ selectProductsTitle }}</template>
+			<template slot="title"><span v-if="isLoading" class="spinner is-active zwoowh-loading-spinner"></span>{{ selectProductsTitle }}</template>
 			<template slot="menu">
 				<h5 class="zwoowh-filter-title">{{ variantProductsTitle }}</h5>
 				<a v-for="parent in productParents" @click.self.prevent="search = parent" href="#">{{ parent }}</a>
 				<div class="separator"></div>
 				<h5 class="zwoowh-filter-title">{{ typesTitle }}</h5>
 				<a v-for="type in productTypes" @click.self.prevent="search = type" href="#">{{ type }}</a>
+				<div class="separator"></div>
+				<h5 class="zwoowh-filter-title">{{ categoryTitle }}</h5>
+				<a v-for="category in allCategories" @click.self.prevent="search = category" href="#">{{ category }}</a>
 			</template>
 			<template slot="router">
 				<input v-model="search" class="large-text" type="search" id="search-products" :placeholder="searchPlaceholder" required>
@@ -97,7 +58,10 @@
 							:type="product.type"
 							:qty="product.qty"
 							:editlink="product.editlink"
+							:categories="product.categories"
 							:stock="product.stock_quantity"
+							:inStock="product.in_stock"
+							:manageStock="product.manage_stock"
 							></tr>
 						</tbody>
 					</table>
@@ -125,6 +89,7 @@
 </template>
 
 <script>
+
 	var Modal = require( './modal.vue' );
 	var ProductRow = require( './product-row.vue' );
 
@@ -140,26 +105,36 @@
 				.$on( 'modalOpen', this.openModal )
 				.$on( 'doSearch', this.doSearch )
 				.$on( 'updateQty', this.updateQty )
-				.$on( 'removeOutOfStock', this.removeOutOfStock );
+				.$on( 'removeOutOfStock', this.removeOutOfStock )
+				.$on( 'loading', this.setLoading );
 		},
 		data() {
 			return {
+				isLoading            : true,
 				modalOpen            : false,
 				sortKey              : 'type',
 				reverse              : false,
 				excludeUnstocked     : false,
 				search               : '',
 				columns              : ZWOOWH.columns,
+				searchParams         : ZWOOWH.searchParams,
 				products             : ZWOOWH.allProducts,
+				allCategories        : ZWOOWH.allCategories,
 				btnText              : ZWOOWH.l10n.addProductsBtn,
 				clearBtn             : ZWOOWH.l10n.clearBtn,
 				variantProductsTitle : ZWOOWH.l10n.variantProductsTitle,
-				selectProductsTitle  : ZWOOWH.l10n.selectProductsTitle,
 				typesTitle           : ZWOOWH.l10n.typesTitle,
+				categoryTitle        : ZWOOWH.l10n.categoryTitle,
 			}
 		},
 
 		computed: {
+			doneLoading() {
+				return this.isLoading ? false : true;
+			},
+			selectProductsTitle() {
+				return ZWOOWH.l10n.selectProductsTitle + ' ('+ this.products.length +' found)';
+			},
 			searchPlaceholder() {
 				return ZWOOWH.l10n.searchPlaceholder
 			},
@@ -204,8 +179,17 @@
 				this.modalOpen = true;
 				setTimeout( () => ZWOOWH.vEvent.$emit( 'modalOpened' ), 100 );
 			},
-			hasStock    : ( product ) => product.stock_quantity > 0,
-			hasQty      : ( product ) => product.qty > 0,
+			hasStock( product ) {
+				// manage_stock   : 0,
+				// in_stock       : 0,
+				// stock_quantity : 0,
+				if ( product.manage_stock ) {
+					return product.in_stock && product.stock_quantity > 0;
+				}
+
+				return product.in_stock ? true : false;
+			},
+			hasQty : ( product ) => product.qty > 0,
 
 			filter() {
 				var results = this.searchResults( this.search );
@@ -222,29 +206,39 @@
 			},
 
 			searchResults( search ) {
-				if ( ! search ) {
+				if ( ! search || search.length < 2 ) {
 					return this.products;
 				}
+
 				var self = this;
-				var i = 0;
+				var i = 0
+				var x = 0;
 				search = self.toLowerString( search );
 
-				var left = this.products.filter( function( product ) {
+				return this.products.filter( function( product ) {
 
-					for ( i = 0; i < self.columns.length; i++ ) {
-						if ( false !== self.columns[i].filter ) {
-							var match = self.toLowerString( product[ self.columns[i].name ] );
+					return _.find( self.searchParams, function( col ) {
 
-							if ( match && match.indexOf( search ) !== -1 ) {
+						var prodVal = self.toLowerString( product[ col ] );
+
+						if ( 'categories' === col && _.isArray( prodVal ) ) {
+							var foundCat = _.find( prodVal, ( cat ) => cat.indexOf( search ) !== -1 );
+
+							if ( foundCat ) {
+								return true;
+							}
+						} else {
+							if ( prodVal && prodVal.indexOf( search ) !== -1 ) {
 								return true;
 							}
 						}
-					}
+
+						return false;
+
+					} );
 
 					return false;
 				} );
-
-				return left;
 			},
 
 			toLowerString( val ) {
@@ -275,17 +269,20 @@
 					var product = this.products.find( function( product ) {
 						return id === product.id;
 					} );
-					if ( qty > product.stock_quantity ) {
+					if ( product.manage_stock && qty > product.stock_quantity ) {
 						qty = product.stock_quantity;
 					}
 
 					product.qty = qty;
-					console.warn('product', this.toJSON( product ));
 				}
 			},
 
 			removeOutOfStock() {
 				this.excludeUnstocked = true;
+			},
+
+			setLoading( loading ) {
+				this.isLoading = loading ? true : false;
 			},
 
 			toJSON: ( data ) => JSON.parse( JSON.stringify( data ) ),
@@ -305,10 +302,14 @@
 					return;
 				}
 
+				var quantities = products.map( function( product ) {
+					return { id: product.id, qty: product.qty };
+				} );
+
 				this.search = '';
 				this.clearQuantities();
 
-				ZWOOWH.vEvent.$emit( 'productsSelected', products );
+				ZWOOWH.vEvent.$emit( 'productsSelected', quantities );
 			},
 
 			clearQuantities() {

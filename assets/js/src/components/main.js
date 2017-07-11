@@ -12,6 +12,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 	'use strict';
 
 	var stepClasses = 'init-wholesale-order build-wholesale-order edit-wholesale-order';
+	var productFields = 'id,img:40,sku,name,price,bt_product_type,manage_stock,stock_quantity,in_stock,editlink,category_names';
 
 	function $get( id ) {
 		return $( document.getElementById( id ) );
@@ -97,6 +98,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 				el: '#zwoowh',
 				data() {
 					return {
+						isLoading        : true,
 						modalOpen        : false,
 						btnText          : 'Click Me',
 						sortKey          : 'type',
@@ -104,6 +106,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 						excludeUnstocked : false,
 						search           : '',
 						columns          : app.columns,
+						searchParams     : app.searchParams,
 						products         : app.allProducts,
 					};
 				},
@@ -119,6 +122,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 				.on( 'click', function() {
 					app.vEvent.$emit( 'modalOpen' );
 				} );
+
+			// Let's get some more.
+			app.getMoreProducts();
 
 			if ( _.isFunction( completeCb ) ) {
 				completeCb();
@@ -138,34 +144,82 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.$.productsTable.css( { 'max-height': contentH - ( thH * 3 ) } );
 	};
 
-	app.getProductVariations = function( parentProduct, completeCb ) {
-		var url = app.rest_url + 'wc/v2/products/' + parentProduct.id +'/variations/?bt_limit_fields=id,img:50,sku,name,price,bt_product_type,stock_quantity,editlink&_wpnonce=' + app.rest_nonce;
+	app.getMoreProducts = function( page ) {
+		page = page || 2;
+		var url = app.rest_url + 'wc/v2/products/?bt_limit_fields=' + productFields + '&status=publish&per_page=100&page=' + page + '&type=simple&_wpnonce=' + app.rest_nonce;
+
+		// console.warn('getMoreProducts, page', page);
+		var params = {
+			type: 'GET',
+			url: url,
+			success: function( response ) {
+				// console.warn('getMoreProducts response', response.length);
+
+				if ( response.length ) {
+					for ( var i = 0; i < response.length; i++ ) {
+						app.addProduct( response[i] );
+					}
+
+					// Keep looping to get all products?
+					app.getMoreProducts( page + 1 );
+				} else {
+					app.vEvent.$emit( 'loading', false );
+				}
+			},
+			error: function( jqXHR, textStatus, errorThrown ) {
+				let err = jqXHR.responseJSON;
+				if ( err.code && err.message ) {
+					window.alert( jqXHR.status + ' ' + err.code + ' - ' + err.message );
+				} else {
+					window.alert( app.l10n.somethingWrong );
+				}
+			},
+		};
+
+		$.ajax( params );
+	};
+
+	app.getProductVariations = function( completeCb, page ) {
+		page = page || 1;
+
+		var parentProduct = app.toProcess[ app.left - 1 ];
+		if ( ! parentProduct ) {
+			return completeCb();
+		}
+
+		var url = app.rest_url + 'wc/v2/products/' + parentProduct.id + '/variations/?bt_limit_fields=' + productFields + '&_wpnonce=' + app.rest_nonce;
+
+		if ( page > 1 ) {
+			url += '&page=' + page;
+		}
+		// console.warn('page', page, parentProduct.id);
 
 		var params = {
 			type: 'GET',
 			url: url,
 			success: function( response ) {
-				// console.warn('wc api variant response', response);
+				// console.warn('wc api variant response', response.length);
 
-				for ( var i = 0; i < response.length; i++ ) {
-					response[i].parent = parentProduct.name;
-					var product = app.prepareProduct( response[i] );
+				if ( response.length ) {
+					for ( var i = 0; i < response.length; i++ ) {
+						response[i].parent = parentProduct.name;
+						app.addProduct( response[i] );
+					}
 
-					// console.warn('product', JSON.parse( JSON.stringify( product ) ));
-					app.allProducts.push( product );
+					app.getProductVariations( completeCb, page + 1 );
+				} else {
+					app.left--;
+
+					if ( app.left < 1 ) {
+						completeCb();
+					} else {
+						app.getProductVariations( completeCb );
+					}
 				}
 
-				app.toProcess--;
-
-				if ( app.toProcess < 1 ) {
-					completeCb();
-				}
-				// for ( var i = 0; i < response.length; i++ ) {
-				// 	console.warn('response['+ i +']', response[i]);
-				// }
 			},
 			error: function( jqXHR, textStatus, errorThrown ) {
-				app.toProcess--;
+				app.left--;
 				let err = jqXHR.responseJSON;
 				if ( err.code && err.message ) {
 					console.error( jqXHR.status + ' ' + err.code + ' - ' + err.message );
@@ -177,7 +231,6 @@ window.ZWOOWH = window.ZWOOWH || {};
 				// });
 			},
 		};
-		// console.warn('params', params);
 
 		$.ajax( params );
 	};
@@ -187,26 +240,25 @@ window.ZWOOWH = window.ZWOOWH || {};
 		if ( app.productCategory > 0 ) {
 			url += '&category='+ app.productCategory;
 		}
-
-		// $url = '/wc/v2/products';
-		// $request = new WP_REST_Request( 'GET', $url );
-		// $request['_wpnonce'] = wp_create_nonce( 'wp_rest' );
-		// $request['status'] = 'publish';
-		// $request['bt_product_type'] = '195';
-		// $request['type'] = 'variable';
+		// if ( 1 === 1 ) {
+		// 	return completeCb();
+		// }
 
 		var params = {
 			type: 'GET',
 			url: url,
 			success: function( response ) {
 				// app.allProducts = [];
-				app.toProcess = response.length;
 
-				// console.warn('wc api response', response);
-					for ( var i = 0; i < response.length; i++ ) {
-						// console.warn('response['+ i +']', response[i]);
-						app.getProductVariations( response[i], completeCb );
-					}
+				if ( response.length ) {
+					app.toProcess = response;
+					app.left = response.length;
+					// console.warn('app.left', app.left);
+
+					app.getProductVariations( completeCb );
+				} else {
+					completeCb();
+				}
 			},
 			error: function( jqXHR, textStatus, errorThrown ) {
 				let err = jqXHR.responseJSON;
@@ -220,16 +272,19 @@ window.ZWOOWH = window.ZWOOWH || {};
 				});
 			},
 		};
-		// console.warn('params', params);
 
 		$.ajax( params );
+	};
+
+	app.addProduct = function( product ) {
+		app.allProducts.push( app.prepareProduct( product ) );
 	};
 
 	app.prepareProduct = function( product ) {
 		// var getRandom = (min, max) => Math.random() * (max - min) + min;
 		_.defaults( product, {
 			id             : 0,
-			img            : '',
+			img            : [],
 			sku            : '',
 			parent         : '',
 			name           : '',
@@ -237,39 +292,25 @@ window.ZWOOWH = window.ZWOOWH || {};
 			type           : '',
 			qty            : '',
 			editlink       : '',
+			categories     : [],
+			manage_stock   : 0,
+			in_stock       : 0,
 			stock_quantity : 0,
 		} );
 
-		// product.img = product.img ? product.img : 'https://via.placeholder.com/50x50';
+		// product.img = product.img ? product.img : 'https://via.placeholder.com/40x40';
 		product.stock_quantity = parseInt( product.stock_quantity, 10 );
 		product.price = product.price ? parseFloat( product.price ) : 0;
 
 		return product;
 	};
 
-	app.addProducts = function( products ) {
+	app.addProducts = function( quantities ) {
 		var order_items = {};
 
-		// TODO figure out why qty parameter is emtpy.
-		//
-		//
-		//
-		//
-		//
-		//
-		var names = products.map( function( product ) {
-			console.warn('product', JSON.parse( JSON.stringify( product ) ) );
-			var title = product.name;
-			if ( product.parent ) {
-				title = product.parent + ' ('+ title +')';
-			}
-			order_items[ product.id + ':' + product.qty ] = product.id;
-			return product.qty + ' of ' + title + ' ('+ product.id +')';
-		} );
-
-		window.alert( 'Adding ' + names.join( ', ' ) );
-
-		console.warn('order_items', order_items);
+		for ( var i = 0; i < quantities.length; i++ ) {
+			order_items[ quantities[i].id + ':' + quantities[i].qty ] = quantities[i].id;
+		}
 
 		// to add items to Woo items metabox:
 		app.$.body.trigger( 'wc_backbone_modal_response', [ 'wc-modal-add-products', {
@@ -287,9 +328,10 @@ window.ZWOOWH = window.ZWOOWH || {};
 			app.$.select.select2( 'open' );
 		}, 1000 );
 
+		// Pass our wholesale nonce through every ajax call.
 		$.ajaxSetup( { data : { is_wholesale: app.is_wholesale } } );
 
-		app.$.body.on( 'wc_backbone_modal_response', function( evt, target, data ) {
+		app.$.body.on( 'wc_backbone_modal_response', function( evt, target ) {
 			if ( 'wc-modal-add-products' === target ) {
 				app.step3();
 			}
@@ -301,14 +343,6 @@ window.ZWOOWH = window.ZWOOWH || {};
 				app.vEvent.$emit( 'modalOpen' );
 			}, 150 );
 		});
-
-		// to add items to Woo items metabox:
-		// app.$.body.trigger( 'wc_backbone_modal_response', [ 'wc-modal-add-products', {
-		// 	add_order_items: [ '63779' ]
-		// } ] );
-		// app.$.body.trigger( 'wc_backbone_modal_response', [ 'wc-modal-add-products', {
-		// 	add_order_items: { '63779:2' : '63779' }
-		// } ] );
 	};
 
 	$( app.init );

@@ -55,9 +55,15 @@ class Wholesale_Order extends Admin {
 	public function enqueue() {
 		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 		wp_enqueue_style( 'zao-woocommerce-wholesale', ZWOOWH_URL . "/assets/css/zao-woocommerce-wholesale{$min}.css", array(), ZWOOWH_VERSION );
-		wp_enqueue_script( 'zao-woocommerce-wholesale', ZWOOWH_URL . "/assets/js/zao-woocommerce-wholesale{$min}.js", array(), ZWOOWH_VERSION, true );
-		wp_localize_script( 'zao-woocommerce-wholesale', 'ZWOOWH', apply_filters( 'zao_woocommerce_wholesale_l10n', array(
+		wp_register_script( 'zao-woocommerce-wholesale', ZWOOWH_URL . "/assets/js/zao-woocommerce-wholesale{$min}.js", array(), ZWOOWH_VERSION, true );
+		add_action( 'admin_footer', array( $this, 'localize_data' ), 12 );
+	}
+
+	public function localize_data() {
+		wp_enqueue_script( 'zao-woocommerce-wholesale' );
+		$data = apply_filters( 'zao_woocommerce_wholesale_l10n', array(
 			'rest_url' => rest_url(),
+			'placeholderImgSrc' => wc_placeholder_img_src(),
 			'rest_nonce' => wp_create_nonce( 'wp_rest' ),
 			'is_wholesale' => wp_create_nonce( __FILE__ ),
 			'allProducts' => array(),
@@ -65,35 +71,43 @@ class Wholesale_Order extends Admin {
 			'columns'      => array(
 				array(
 					'name' => 'img',
-					'title' => 'Thumb',
+					'title' => __( 'Thumb', 'zwoowh' ),
 					'filter' => false,
 				),
 				array(
 					'name' => 'sku',
-					'title' => 'SKU',
-				),
-				array(
-					'name' => 'parent',
-					'title' => 'Parent',
+					'title' => __( 'SKU', 'zwoowh' ),
 				),
 				array(
 					'name' => 'name',
-					'title' => 'Name/Variation',
+					'title' => __( 'Name/Variation', 'zwoowh' ),
 				),
 				array(
 					'name' => 'price',
-					'title' => 'Price',
+					'title' => __( 'Price', 'zwoowh' ),
 				),
 				array(
 					'name' => 'type',
-					'title' => 'Type',
+					'title' => __( 'Type', 'zwoowh' ),
+				),
+				array(
+					'name' => 'categories',
+					'title' => __( 'Categories', 'zwoowh' ),
 				),
 				array(
 					'name' => 'qty',
-					'title' => 'Quantity',
+					'title' => __( 'Quantity', 'zwoowh' ),
 					'filter' => false,
 				),
 			),
+			'searchParams' => array(
+				'name',
+				'parent',
+				'sku',
+				'type',
+				'categories',
+			),
+			'allCategories' => get_terms( 'product_cat', array( 'fields' => 'names', 'update_term_meta_cache' => false ) ),
 			'l10n' => array(
 				'somethingWrong'       => __( 'Something went wrong and we were not able to retrieve the wholesale products.', 'zwoowh' ),
 				'noStockTitle'         => __( 'This item is out of stock.', 'zwoowh' ),
@@ -102,9 +116,13 @@ class Wholesale_Order extends Admin {
 				'selectProductsTitle'  => __( 'Select Products', 'zwoowh' ),
 				'variantProductsTitle' => __( 'Variant Products', 'zwoowh' ),
 				'typesTitle'           => __( 'Types', 'zwoowh' ),
+				'categoryTitle'        => __( 'Categories', 'zwoowh' ),
 				'searchPlaceholder'    => __( 'Filter products by id, sku, name, parent, price, etc', 'zwoowh' ),
 			),
-		) ) );
+		) );
+
+		// wp_die( '<xmp style="padding-left:300px">'. __LINE__ .') $data: '. print_r( $data, true ) .'</xmp>' );
+		wp_localize_script( 'zao-woocommerce-wholesale', 'ZWOOWH', $data );
 	}
 
 	public function add_help() {
@@ -185,18 +203,27 @@ class Wholesale_Order extends Admin {
 			return;
 		}
 
-		$old_qty = $order_item_product->get_quantity( 'edit' );
-		$product_id = absint( $order_item_product->get_product_id( 'edit' ) );
+		$product_id = $order_item_product->get_variation_id();
+
+		if ( ! $product_id ) {
+			$product_id = absint( $order_item_product->get_product_id( 'edit' ) );
+		}
 
 		foreach ( $_REQUEST['item_to_add'] as $key => $prod_id_to_check ) {
+
 			if (
 				absint( $prod_id_to_check ) !== $product_id
-				|| 0 !== strpos( $key, $product_id . ':' ) ) {
+				|| 0 !== strpos( $key, $product_id . ':' )
+			) {
 				continue;
 			}
 
-			$new_qty = absint( str_replace( $product_id . ':', '', $key ) );
-			$order_item_product->set_quantity( $new_qty );
+			$parts = explode( ':', $key );
+			if ( empty( $parts[1] ) ) {
+				continue;
+			}
+
+			$order_item_product->set_quantity( absint( $parts[1] ) );
 			break;
 		}
 	}

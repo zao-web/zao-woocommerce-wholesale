@@ -8,6 +8,7 @@ class Plugin extends Base {
 	protected $admin;
 
 	protected $wholesale_users;
+	protected $rest_api;
 
 	/**
 	 * Creates or returns an instance of this class.
@@ -25,6 +26,7 @@ class Plugin extends Base {
 	protected function __construct() {
 
 		$this->wholesale_users = new User;
+		$this->rest_api = new REST_API;
 
 		if ( is_admin() ) {
 			$this->admin = new Admin\Admin;
@@ -34,6 +36,7 @@ class Plugin extends Base {
 	public function init() {
 
 		$this->wholesale_users->init();
+		$this->rest_api->init();
 
 		if ( is_admin() ) {
 			$this->admin->init();

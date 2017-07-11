@@ -5,6 +5,9 @@
  * Copyright (c) 2017 Zao
  * Licensed under the GPL-2.0+ license.
  */
+.is-wholesale-order .metabox-holder .postbox-container .empty-container {
+  border: 0; }
+
 .init-wholesale-order #order_data {
   padding-bottom: 23px; }
   .init-wholesale-order #order_data .order_data_column {
@@ -41,11 +44,62 @@
 .init-wholesale-order .postbox:not(#woocommerce-order-data) {
   display: none; }
 
-.init-wholesale-order .metabox-holder .postbox-container .empty-container {
-  border: 0; }
-
 .build-wholesale-order .postbox:not(#woocommerce-order-items):not(:active):not(:focus):not(:hover) {
   opacity: .3; }
 
 .build-wholesale-order #woocommerce-order-items {
   box-shadow: 0px 0px 12px rgba(0, 120, 180, 0.8) !important; }
+
+.zwoowh-products {
+  overflow-y: scroll;
+  max-height: 600px; }
+  .zwoowh-products .widefat {
+    border-top: 0; }
+  .zwoowh-products .categories {
+    max-width: 200px; }
+    .zwoowh-products .categories li {
+      display: inline-block; }
+      .zwoowh-products .categories li:not(:last-child) a {
+        padding-right: 5px; }
+        .zwoowh-products .categories li:not(:last-child) a:after {
+          content: ','; }
+
+#zwoowh td, #zwoowh th {
+  width: 19%; }
+
+#zwoowh td.img,
+#zwoowh th.img,
+#zwoowh td.sku,
+#zwoowh th.sku,
+#zwoowh td.price,
+#zwoowh th.price {
+  width: 7%; }
+
+#zwoowh .product-row input {
+  width: 5em; }
+
+#zwoowh .table-head > thead > tr > th {
+  border-bottom: 0; }
+
+#zwoowh .table-foot > tfoot > tr > th {
+  border-top: 0; }
+
+#zwoowh .zwoowh-filter-title {
+  display: block;
+  position: relative;
+  padding: 8px 20px;
+  margin: 0;
+  font-size: 14px; }
+
+#zwoowh .disabled-row {
+  opacity: .5; }
+
+#zwoowh .zwoowh-loading-spinner {
+  margin: .77em .5em 0 0;
+  float: left; }
+
+#zwoowh .media-menu {
+  overflow-y: scroll; }
+  #zwoowh .media-menu .zwoowh-loading-spinner {
+    margin: .5em 0 0 1.5em;
+    float: none; }
