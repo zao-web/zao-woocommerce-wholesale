@@ -87,17 +87,17 @@ class Wholesale_Order extends Admin {
 					'title' => __( 'Price', 'zwoowh' ),
 				),
 				array(
+					'name' => 'qty',
+					'title' => __( 'Quantity', 'zwoowh' ),
+					'filter' => false,
+				),
+				array(
 					'name' => 'type',
 					'title' => __( 'Type', 'zwoowh' ),
 				),
 				array(
 					'name' => 'categories',
 					'title' => __( 'Categories', 'zwoowh' ),
-				),
-				array(
-					'name' => 'qty',
-					'title' => __( 'Quantity', 'zwoowh' ),
-					'filter' => false,
 				),
 			),
 			'searchParams' => array(
