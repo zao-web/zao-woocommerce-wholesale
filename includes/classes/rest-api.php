@@ -40,7 +40,7 @@ class REST_API {
 					} elseif ( 'bt_product_type' === $filter ) {
 
 						$terms = get_the_terms( absint( $main_product_id ), $filter );
-						$limited_product['type'] = isset( $terms[0]->name ) ? $terms[0]->name : '';
+						$limited_product['type'] = ! is_wp_error( $terms ) && isset( $terms[0]->name ) ? $terms[0]->name : '';
 
 					} elseif ( 'editlink' === $filter ) {
 
