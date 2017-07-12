@@ -65,7 +65,7 @@
           content: ','; }
 
 #zwoowh td, #zwoowh th {
-  width: 19%; }
+  width: 26%; }
 
 #zwoowh td.img,
 #zwoowh th.img,
@@ -74,6 +74,20 @@
 #zwoowh td.price,
 #zwoowh th.price {
   width: 7%; }
+
+#zwoowh td.qty,
+#zwoowh th.qty {
+  width: 12%; }
+
+#zwoowh td.type,
+#zwoowh th.type {
+  width: 15%; }
+
+#zwoowh td.name,
+#zwoowh th.name,
+#zwoowh td.categories,
+#zwoowh th.categories {
+  width: 15%; }
 
 #zwoowh .product-row input {
   width: 5em; }

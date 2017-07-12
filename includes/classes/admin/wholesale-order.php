@@ -87,17 +87,17 @@ class Wholesale_Order extends Admin {
 					'title' => __( 'Price', 'zwoowh' ),
 				),
 				array(
+					'name' => 'qty',
+					'title' => __( 'Quantity', 'zwoowh' ),
+					'filter' => false,
+				),
+				array(
 					'name' => 'type',
 					'title' => __( 'Type', 'zwoowh' ),
 				),
 				array(
 					'name' => 'categories',
 					'title' => __( 'Categories', 'zwoowh' ),
-				),
-				array(
-					'name' => 'qty',
-					'title' => __( 'Quantity', 'zwoowh' ),
-					'filter' => false,
 				),
 			),
 			'searchParams' => array(
@@ -118,6 +118,7 @@ class Wholesale_Order extends Admin {
 				'typesTitle'           => __( 'Types', 'zwoowh' ),
 				'categoryTitle'        => __( 'Categories', 'zwoowh' ),
 				'searchPlaceholder'    => __( 'Filter products by id, sku, name, parent, price, etc', 'zwoowh' ),
+				'plsWait'              => __( 'Loading Products. Please try again in a second.', 'zwoowh' ),
 			),
 		) );
 
@@ -132,6 +133,7 @@ class Wholesale_Order extends Admin {
 			select.setAttribute( 'data-placeholder', '<?php echo esc_js( __( 'Search for Wholesaler', 'zwoowh' ) ); ?>' );
 			select.style.width = '99%';
 		</script>
+		<input type="hidden" name="is_wholesale" value="1"/>
 		<?php
 	}
 
