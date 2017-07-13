@@ -112,7 +112,7 @@
 			return {
 				isLoading            : true,
 				modalOpen            : false,
-				sortKey              : 'type',
+				sortKey              : 'sku',
 				reverse              : false,
 				excludeUnstocked     : false,
 				search               : '',

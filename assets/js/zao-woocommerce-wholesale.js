@@ -1,5 +1,5 @@
 /**
- * Zao WooCommerce Wholesale - v0.1.0 - 2017-07-11
+ * Zao WooCommerce Wholesale - v0.1.0 - 2017-07-13
  * https://zao.is
  *
  * Copyright (c) 2017 Zao
@@ -41,7 +41,7 @@ exports.default = {
 		return {
 			isLoading: true,
 			modalOpen: false,
-			sortKey: 'type',
+			sortKey: 'sku',
 			reverse: false,
 			excludeUnstocked: false,
 			search: '',
