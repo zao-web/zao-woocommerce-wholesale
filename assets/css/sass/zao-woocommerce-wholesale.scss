@@ -187,5 +187,34 @@
 		}
 
 	}
+
+	.filter-link {
+		&:after {
+			content: "\f139";
+			display: inline-block;
+			width: 20px;
+			height: 20px;
+			font-size: 15px;
+			line-height: 1;
+			font-family: dashicons;
+			text-decoration: inherit;
+			font-weight: normal;
+			font-style: normal;
+			vertical-align: top;
+			text-align: center;
+			-webkit-transition: color .1s ease-in 0;
+			transition: color .1s ease-in 0;
+			-webkit-font-smoothing: antialiased;
+			-moz-osx-font-smoothing: grayscale;
+			text-decoration: none;
+			line-height: 21px;
+			margin-left: -3px;
+			color: limegreen;
+		}
+	}
+
+	th .filter-link:after {
+		position: absolute;
+	}
 }
 

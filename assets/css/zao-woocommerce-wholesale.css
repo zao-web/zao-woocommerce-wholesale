@@ -117,3 +117,27 @@
   #zwoowh .media-menu .zwoowh-loading-spinner {
     margin: .5em 0 0 1.5em;
     float: none; }
+
+#zwoowh .filter-link:after {
+  content: "\f139";
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  font-size: 15px;
+  line-height: 1;
+  font-family: dashicons;
+  text-decoration: inherit;
+  font-weight: normal;
+  font-style: normal;
+  vertical-align: top;
+  text-align: center;
+  transition: color .1s ease-in 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-decoration: none;
+  line-height: 21px;
+  margin-left: -3px;
+  color: limegreen; }
+
+#zwoowh th .filter-link:after {
+  position: absolute; }

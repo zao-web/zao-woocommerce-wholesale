@@ -17,13 +17,13 @@
 		<modal v-show="modalOpen">
 			<template slot="title"><span v-if="isLoading" class="spinner is-active zwoowh-loading-spinner"></span>{{ selectProductsTitle }}</template>
 			<template slot="menu">
-				<h5 class="zwoowh-filter-title">{{ variantProductsTitle }}</h5>
+				<h5 class="zwoowh-filter-title filter-link">{{ variantProductsTitle }}</h5>
 				<a v-for="parent in productParents" @click.self.prevent="search = parent" href="#">{{ parent }}</a>
 				<div class="separator"></div>
-				<h5 class="zwoowh-filter-title">{{ typesTitle }}</h5>
+				<h5 class="zwoowh-filter-title filter-link">{{ typesTitle }}</h5>
 				<a v-for="type in productTypes" @click.self.prevent="search = type" href="#">{{ type }}</a>
 				<div class="separator"></div>
-				<h5 class="zwoowh-filter-title">{{ categoryTitle }}</h5>
+				<h5 class="zwoowh-filter-title filter-link">{{ categoryTitle }}</h5>
 				<a v-for="category in allCategories" @click.self.prevent="search = category" href="#">{{ category }}</a>
 			</template>
 			<template slot="router">
@@ -35,7 +35,7 @@
 					<thead>
 						<tr>
 						<th v-for="column in columns" :class="column.name">
-							<a href="#" @click.self.prevent="sortBy(column.name)" :class="sortKey == column ? 'active' : null">
+							<a href="#" @click.self.prevent="sortBy(column.name)" :class="sortKey == column ? 'active filter-link' : 'filter-link'">
 								{{ column.title }}
 							</a>
 						</th>

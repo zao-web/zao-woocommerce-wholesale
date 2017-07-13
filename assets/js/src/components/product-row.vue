@@ -7,7 +7,7 @@
 		<td class="name">
 			<a :href="editlink">{{ name }}</a>
 			<div v-if="parent">
-				Parent: <a :href="editlink" @click.self.prevent="doParentSearch">{{ parent }}</a>
+				Parent: <a class="filter-link" :href="editlink" @click.self.prevent="doParentSearch">{{ parent }}</a>
 			</div>
 		</td>
 		<td class="price">${{ formattedPrice }}</td>
@@ -16,13 +16,13 @@
 				<input size="3" @input.self.prevent="updateQty" :id="idAttr" :name="qtyName" :disabled="isDisabled" :value="qty" type="number" step="1" min="0" pattern="[0-9]"/><template v-if="minStock">&nbsp;<span style="inline-block">of {{ minStock }}</span></template>
 			</template>
 			<template v-else>
-			  {{ noStockTitle }} <a @click.self.prevent="removeOutOfStock" href="#" class="remove-out-of-stock-button dashicons dashicons-no"></a>
+			  {{ noStockTitle }} <a @click.self.prevent="removeOutOfStock" href="#" class="remove-out-of-stock-button dashicons dashicons-no filter-link"></a>
 			</template>
 		</td>
-		<td class="type"><a @click.self.prevent="doTypeSearch" href="#">{{ type }}</a></td>
+		<td class="type"><a class="filter-link" @click.self.prevent="doTypeSearch" href="#">{{ type }}</a></td>
 		<td class="categories">
 			<ul v-if="hasCategories">
-				<li v-for="category in categories"><a @click.self.prevent="doCategorySearch" href="#">{{ category }}</a></li>
+				<li v-for="category in categories"><a class="filter-link" @click.self.prevent="doCategorySearch" href="#">{{ category }}</a></li>
 			</ul>
 		</td>
 	</tr>
