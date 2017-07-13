@@ -173,13 +173,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 				}
 			},
 			error: function( jqXHR, textStatus, errorThrown ) {
-				let err = jqXHR.responseJSON;
-				if ( err && err.code && err.message ) {
-					window.alert( jqXHR.status + ' ' + err.code + ' - ' + err.message );
-				} else {
-					console.warn('error', { jqXHR, textStatus, errorThrown });
-					window.alert( app.l10n.somethingWrong );
-				}
+				let err = app.errMessage( jqXHR );
+				console.warn('error', { jqXHR, textStatus, errorThrown } );
+				window.alert( err );
 			},
 		};
 
@@ -227,15 +223,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 			},
 			error: function( jqXHR, textStatus, errorThrown ) {
 				app.left--;
-				let err = jqXHR.responseJSON;
-				if ( err.code && err.message ) {
-					console.error( jqXHR.status + ' ' + err.code + ' - ' + err.message );
-				} else {
-					console.error( app.l10n.somethingWrong );
-				}
-				// console.error('wc api response error', {
-				// 	jqXHR, textStatus, errorThrown
-				// } );
+
+				let err = app.errMessage( jqXHR );
+				console.error( err );
 			},
 		};
 
@@ -275,15 +265,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 				}
 			},
 			error: function( jqXHR, textStatus, errorThrown ) {
-				let err = jqXHR.responseJSON;
-				if ( err.code && err.message ) {
-					window.alert( jqXHR.status + ' ' + err.code + ' - ' + err.message );
-				} else {
-					window.alert( app.l10n.somethingWrong );
-				}
-				console.error('wc api response error', {
-					jqXHR, textStatus, errorThrown
-				} );
+				let err = app.errMessage( jqXHR );
+				window.alert( err );
+				console.error('wc api response error', { jqXHR, textStatus, errorThrown } );
 			},
 		};
 
@@ -334,6 +318,17 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.vEvent.$emit( 'modalClose' );
 	};
 
+	app.errMessage = function( jqXHR ) {
+		var msg = app.l10n.somethingWrong;
+		var err = jqXHR.responseJSON;
+
+		if ( err && err.code && err.message ) {
+			msg = jqXHR.status + ' ' + err.code + ' - ' + err.message;
+		}
+
+		return msg;
+	};
+
 	app.init = function() {
 		console.warn('ZWOOWH init');
 		app.cache();
@@ -349,6 +344,18 @@ window.ZWOOWH = window.ZWOOWH || {};
 		} );
 
 		app.$.select.on( 'change', app.toggleOrderBoxes );
+
+		// disable mousewheel on a input number field when in focus
+		// (to prevent Chromium browsers change the value when scrolling)
+		app.$.body
+			.on( 'focus', '#quantities-form input[type=number]', function( evt ) {
+			  $( this ).on( 'mousewheel.disableScroll', function( evt ) {
+			    evt.preventDefault();
+			  } );
+			} )
+			.on( 'blur', '#quantities-form input[type=number]', function( evt ) {
+			  $( this ).off( 'mousewheel.disableScroll' );
+			} );
 
 		setTimeout( function() {
 			app.$.select.select2( 'open' );
