@@ -43,7 +43,7 @@ exports.default = {
 			modalOpen: false,
 			sortKey: 'sku',
 			reverse: false,
-			excludeUnstocked: false,
+			excludeUnstocked: true,
 			search: '',
 			columns: ZWOOWH.columns,
 			searchParams: ZWOOWH.searchParams,
