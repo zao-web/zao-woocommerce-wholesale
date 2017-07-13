@@ -345,6 +345,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 		app.initVue( function() {
 			console.warn('Products initiated.');
+			// app.vEvent.$emit( 'modalOpen' );
 		} );
 
 		app.$.select.on( 'change', app.toggleOrderBoxes );

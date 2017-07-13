@@ -13,7 +13,7 @@
 		<td class="price">${{ formattedPrice }}</td>
 		<td class="qty">
 			<template v-if="hasStock">
-				<input size="3" @input.self.prevent="updateQty" :id="idAttr" :name="qtyName" :disabled="isDisabled" :value="qty" type="number" step="1" min="0" pattern="[0-9]"/><template v-if="minStock">&nbsp;<span style="inline-block">of {{ minStock }}</span></template>
+				<input :tabindex="index + 1" size="3" @input.self.prevent="updateQty" :id="idAttr" :name="qtyName" :disabled="isDisabled" :value="qty" type="number" step="1" min="0" pattern="[0-9]"/><template v-if="minStock">&nbsp;<span style="inline-block">of {{ minStock }}</span></template>
 			</template>
 			<template v-else>
 			  {{ noStockTitle }} <a @click.self.prevent="removeOutOfStock" href="#" class="remove-out-of-stock-button dashicons dashicons-no filter-link"></a>
@@ -30,7 +30,7 @@
 
 <script>
 	export default {
-		props: [ 'id', 'img', 'sku', 'name', 'price', 'parent', 'type', 'qty', 'stock', 'inStock', 'manageStock', 'editlink', 'categories' ],
+		props: [ 'id', 'index', 'img', 'sku', 'name', 'price', 'parent', 'type', 'qty', 'stock', 'inStock', 'manageStock', 'editlink', 'categories' ],
 
 		computed: {
 			hasCategories() {
