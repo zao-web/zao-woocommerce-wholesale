@@ -164,15 +164,12 @@ class Wholesale_Order extends Admin {
 			return $price;
 		}
 
-		$margin = $product->get_meta( 'wholesale_margin' );
+		// Margins are currently set on parent product, not per-variation
+		if ( 'variation' === $product->get_type() ) {
+			$product = wc_get_product( $product->get_parent_id() );
+		}
 
-		error_log( var_export( array(
-			'doing_action'   => doing_action( 'wp_ajax_woocommerce_add_order_item' ),
-			'current_action' => current_action(),
-			'margin'         => $margin,
-			'price'          => $price,
-			'product'     => $product,
-		), 1 ) );
+		$margin = $product->get_meta( 'wholesale_margin' );
 
 		if ( $margin ) {
 			// NOTE: Dynamic Pricing is being used to add a 50% discount to admin orders
