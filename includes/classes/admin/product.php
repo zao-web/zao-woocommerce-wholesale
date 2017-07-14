@@ -13,8 +13,8 @@ class Product extends Admin {
 
 	public function init() {
 
-		add_action( 'woocommerce_product_options_pricing', array( $this, 'add_wholesale_margin_input' ) );
-		add_action( 'woocommerce_process_product_meta'   , array( $this, 'save_wholesale_margin' ) );
+		add_action( 'woocommerce_product_options_general_product_data', array( $this, 'add_wholesale_margin_input' ) );
+		add_action( 'woocommerce_process_product_meta'                , array( $this, 'save_wholesale_margin' ) );
 	}
 
 

@@ -26,6 +26,7 @@ class Wholesale_Order extends Admin {
 	public function init() {
 
 		add_action( 'woocommerce_process_shop_order_meta', array( $this, 'save_wholesale_order_meta' ) );
+		add_filter( 'woocommerce_get_price_excluding_tax', array( $this, 'filter_wholesale_pricing' ), 10, 3 );
 
 		if ( ! $this->is_wholesale ) {
 			return;
@@ -34,16 +35,14 @@ class Wholesale_Order extends Admin {
 		$order_type_object = get_post_type_object( sanitize_text_field( 'shop_order' ) );
 		$order_type_object->labels->add_new_item = __( 'Add new wholesale order', 'zwoowh' );
 
+		add_filter( 'woocommerce_dynamic_pricing_process_product_discounts', '__return_false' );
+
 		add_filter( 'admin_body_class'     , array( $this, 'filter_admin_body_class' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'admin_footer'         , array( $this, 'add_app' ) );
 		add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'add_help' ) );
 
-		add_filter( 'woocommerce_get_price_excluding_tax', array( $this, 'filter_wholesale_pricing' ), 10, 3 );
-
 		add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
-		// add_action( 'wp_ajax_zwoowh_get_products', array( $this, 'get_products' ), 5 );
-
 		add_action( 'woocommerce_before_order_item_object_save', array( $this, 'set_item_qty' ), 10, 2 );
 	}
 
@@ -135,7 +134,7 @@ class Wholesale_Order extends Admin {
 			select.setAttribute( 'data-placeholder', '<?php echo esc_js( __( 'Search for Wholesaler', 'zwoowh' ) ); ?>' );
 			select.style.width = '99%';
 		</script>
-		<input type="hidden" name="is_wholesale" value="1"/>
+		<input type="hidden" name="is_wholesale" value="1" />
 		<?php
 	}
 
@@ -167,7 +166,16 @@ class Wholesale_Order extends Admin {
 
 		$margin = $product->get_meta( 'wholesale_margin' );
 
+		error_log( var_export( array(
+			'doing_action'   => doing_action( 'wp_ajax_woocommerce_add_order_item' ),
+			'current_action' => current_action(),
+			'margin'         => $margin,
+			'price'          => $price,
+			'product'     => $product,
+		), 1 ) );
+
 		if ( $margin ) {
+			// NOTE: Dynamic Pricing is being used to add a 50% discount to admin orders
 			return $price / $margin;
 		}
 
