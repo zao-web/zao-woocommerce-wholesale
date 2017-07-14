@@ -96,6 +96,10 @@ exports.default = {
 				results.reverse();
 			}
 
+			results = _.sortBy(results, function (p) {
+				return !p.qty || p.qty < 1;
+			});
+
 			return results;
 		}
 	},
@@ -601,6 +605,25 @@ window.ZWOOWH = window.ZWOOWH || {};
 		return msg;
 	};
 
+	// Because underscore's debounce is whack...
+	app.debouce = function (func, wait) {
+		var timeout, args, context;
+
+		return function () {
+			context = this;
+			args = arguments;
+
+			if (timeout) {
+				clearTimeout(timeout);
+			}
+
+			timeout = setTimeout(function () {
+				func.apply(context, args);
+				timeout = null;
+			}, wait);
+		};
+	};
+
 	app.init = function () {
 		console.warn('ZWOOWH init');
 		app.cache();
@@ -642,7 +665,6 @@ window.ZWOOWH = window.ZWOOWH || {};
 })(window, document, jQuery, window.ZWOOWH);
 
 },{"./app.vue":1,"vue":44}],3:[function(require,module,exports){
-var __vueify_style_dispose__ = require("vueify/lib/insert-css").insert(".zwoowh-content {\n\tpadding: 16px;\n}")
 ;(function(){
 'use strict';
 
@@ -650,6 +672,17 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 exports.default = {
+	computed: {
+		closeBtn: function closeBtn() {
+			return ZWOOWH.l10n.closeBtn;
+		},
+		selectProductsTitle: function selectProductsTitle() {
+			return ZWOOWH.l10n.selectProductsTitle;
+		},
+		insertBtn: function insertBtn() {
+			return ZWOOWH.l10n.insertBtn;
+		}
+	},
 	methods: {
 		emitClose: function emitClose() {
 			ZWOOWH.vEvent.$emit('modalClose');
@@ -660,20 +693,19 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticStyle:{"position":"relative"},attrs:{"id":"zwoowh-modal","tabindex":"0"}},[_c('div',{staticClass:"media-modal wp-core-ui"},[_c('button',{staticClass:"media-modal-close",attrs:{"type":"button"},on:{"click":_vm.emitClose}},[_vm._m(0)]),_vm._v(" "),_c('div',{staticClass:"media-modal-content"},[_c('div',{staticClass:"media-frame mode-select wp-core-ui"},[_c('div',{staticClass:"media-frame-menu"},[_c('div',{staticClass:"media-menu"},[_vm._t("menu")],2)]),_vm._v(" "),_c('div',{staticClass:"media-frame-title"},[_c('h1',[_vm._t("title",[_vm._v("Select Products")])],2)]),_vm._v(" "),_c('div',{staticClass:"media-frame-router"},[_c('div',{staticClass:"media-router"},[_vm._t("router")],2)]),_vm._v(" "),_c('div',{staticClass:"media-frame-content"},[_c('div',{staticClass:"zwoowh-content"},[_vm._t("default")],2)]),_vm._v(" "),_c('div',{staticClass:"media-frame-toolbar"},[_c('div',{staticClass:"media-toolbar"},[_c('div',{staticClass:"media-toolbar-primary search-form"},[_vm._t("addBtn",[_c('button',{staticClass:"button media-button button-primary button-large media-button-insert",attrs:{"type":"button"}},[_vm._v("Insert")])])],2)])])])])]),_vm._v(" "),_c('div',{staticClass:"media-modal-backdrop"})])}
-__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('span',{staticClass:"media-modal-icon"},[_c('span',{staticClass:"screen-reader-text"},[_vm._v("Close product selector")])])}]
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticStyle:{"position":"relative"},attrs:{"id":"zwoowh-modal","tabindex":"0"}},[_c('div',{staticClass:"media-modal wp-core-ui"},[_c('button',{staticClass:"media-modal-close",attrs:{"type":"button"},on:{"click":_vm.emitClose}},[_c('span',{staticClass:"media-modal-icon"},[_c('span',{staticClass:"screen-reader-text"},[_vm._v(_vm._s(_vm.closeBtn))])])]),_vm._v(" "),_c('div',{staticClass:"media-modal-content"},[_c('div',{staticClass:"media-frame mode-select wp-core-ui"},[_c('div',{staticClass:"media-frame-menu"},[_c('div',{staticClass:"media-menu"},[_vm._t("menu")],2)]),_vm._v(" "),_c('div',{staticClass:"media-frame-title"},[_c('h1',[_vm._t("title",[_vm._v(_vm._s(_vm.selectProductsTitle))])],2)]),_vm._v(" "),_c('div',{staticClass:"media-frame-router"},[_c('div',{staticClass:"media-router"},[_vm._t("router")],2)]),_vm._v(" "),_c('div',{staticClass:"media-frame-content"},[_c('div',{staticClass:"zwoowh-content"},[_vm._t("default")],2)]),_vm._v(" "),_c('div',{staticClass:"media-frame-toolbar"},[_c('div',{staticClass:"media-toolbar"},[_c('div',{staticClass:"media-toolbar-primary search-form"},[_vm._t("addBtn",[_c('button',{staticClass:"button media-button button-primary button-large media-button-insert",attrs:{"type":"button"}},[_vm._v(_vm._s(_vm.insertBtn))])])],2)])])])])]),_vm._v(" "),_c('div',{staticClass:"media-modal-backdrop"})])}
+__vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
   module.hot.accept()
-  module.hot.dispose(__vueify_style_dispose__)
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-f5d20930", __vue__options__)
   } else {
     hotAPI.reload("data-v-f5d20930", __vue__options__)
   }
 })()}
-},{"vue":44,"vue-hot-reload-api":43,"vueify/lib/insert-css":45}],4:[function(require,module,exports){
+},{"vue":44,"vue-hot-reload-api":43}],4:[function(require,module,exports){
 ;(function(){
 'use strict';
 
@@ -740,9 +772,10 @@ exports.default = {
 		doParentSearch: function doParentSearch() {
 			ZWOOWH.vEvent.$emit('doSearch', this.parent);
 		},
-		updateQty: function updateQty(evt) {
+
+		updateQty: ZWOOWH.debouce(function (evt) {
 			ZWOOWH.vEvent.$emit('updateQty', this.id, evt.target.value);
-		},
+		}, 1400),
 		removeOutOfStock: function removeOutOfStock() {
 			ZWOOWH.vEvent.$emit('removeOutOfStock');
 		}

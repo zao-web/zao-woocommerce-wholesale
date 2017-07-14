@@ -329,6 +329,25 @@ window.ZWOOWH = window.ZWOOWH || {};
 		return msg;
 	};
 
+	// Because underscore's debounce is whack...
+	app.debouce = function( func, wait ) {
+		var timeout, args, context;
+
+		return function() {
+			context = this;
+			args = arguments;
+
+			if ( timeout ) {
+				clearTimeout( timeout );
+			}
+
+			timeout = setTimeout( function() {
+				func.apply(context, args);
+				timeout = null;
+			}, wait );
+		};
+	};
+
 	app.init = function() {
 		console.warn('ZWOOWH init');
 		app.cache();

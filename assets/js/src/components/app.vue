@@ -166,6 +166,9 @@
 					results.reverse();
 				}
 
+				// Put the products with any quantity selected at the top
+				results = _.sortBy( results, ( p ) => ! p.qty || p.qty < 1 );
+
 				return results;
 			},
 		},

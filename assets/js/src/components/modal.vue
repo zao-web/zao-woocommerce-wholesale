@@ -1,15 +1,9 @@
-<style>
-	.zwoowh-content {
-		padding: 16px;
-	}
-</style>
-
 <template>
 	<div id="zwoowh-modal" tabindex="0" style="position: relative;">
 		<div class="media-modal wp-core-ui">
 			<button type="button" @click="emitClose" class="media-modal-close">
 				<span class="media-modal-icon">
-					<span class="screen-reader-text">Close product selector</span>
+					<span class="screen-reader-text">{{ closeBtn }}</span>
 				</span>
 			</button>
 			<div class="media-modal-content">
@@ -21,7 +15,7 @@
 					</div>
 					<div class="media-frame-title">
 						<h1>
-							<slot name="title">Select Products</slot>
+							<slot name="title">{{ selectProductsTitle }}</slot>
 						</h1>
 					</div>
 					<div class="media-frame-router">
@@ -38,7 +32,7 @@
 						<div class="media-toolbar">
 							<div class="media-toolbar-primary search-form">
 								<slot name="addBtn">
-									<button type="button" class="button media-button button-primary button-large media-button-insert">Insert</button>
+									<button type="button" class="button media-button button-primary button-large media-button-insert">{{ insertBtn }}</button>
 								</slot>
 							</div>
 						</div>
@@ -52,6 +46,11 @@
 
 <script>
 	export default {
+		computed: {
+			closeBtn            : () => ZWOOWH.l10n.closeBtn,
+			selectProductsTitle : () => ZWOOWH.l10n.selectProductsTitle,
+			insertBtn           : () => ZWOOWH.l10n.insertBtn,
+		},
 		methods : {
 			emitClose() {
 				ZWOOWH.vEvent.$emit( 'modalClose' );

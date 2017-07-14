@@ -94,9 +94,10 @@
 			doParentSearch() {
 				ZWOOWH.vEvent.$emit( 'doSearch', this.parent );
 			},
-			updateQty( evt ) {
+			// Debounced to give user time to finish input before resorting.
+			updateQty: ZWOOWH.debouce( function( evt ) {
 				ZWOOWH.vEvent.$emit( 'updateQty', this.id, evt.target.value );
-			},
+			}, 1400 ),
 			removeOutOfStock() {
 				ZWOOWH.vEvent.$emit( 'removeOutOfStock' );
 			}
