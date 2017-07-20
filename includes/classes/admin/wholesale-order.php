@@ -28,6 +28,8 @@ class Wholesale_Order extends Admin {
 		add_action( 'woocommerce_process_shop_order_meta', array( $this, 'save_wholesale_order_meta' ) );
 		add_filter( 'woocommerce_get_price_excluding_tax', array( $this, 'filter_wholesale_pricing' ), 10, 3 );
 
+		add_filter( 'woocommerce_dynamic_pricing_process_product_discounts', '__return_false' );
+
 		if ( ! $this->is_wholesale ) {
 			return;
 		}
@@ -35,15 +37,15 @@ class Wholesale_Order extends Admin {
 		$order_type_object = get_post_type_object( sanitize_text_field( 'shop_order' ) );
 		$order_type_object->labels->add_new_item = __( 'Add new wholesale order', 'zwoowh' );
 
-		add_filter( 'woocommerce_dynamic_pricing_process_product_discounts', '__return_false' );
-
 		add_filter( 'admin_body_class'     , array( $this, 'filter_admin_body_class' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'admin_footer'         , array( $this, 'add_app' ) );
 		add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'add_help' ) );
 
 		add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
+
 		add_action( 'woocommerce_before_order_item_object_save', array( $this, 'set_item_qty' ), 10, 2 );
+
 	}
 
 	public function filter_admin_body_class( $body_class = '' ) {
@@ -166,14 +168,14 @@ class Wholesale_Order extends Admin {
 
 		// Margins are currently set on parent product, not per-variation
 		if ( 'variation' === $product->get_type() ) {
-			$product = wc_get_product( $product->get_parent_id() );
+			$_product = wc_get_product( $product->get_parent_id() );
+			$margin   = $_product->get_meta( 'wholesale_margin' );
+		} else {
+			$margin = $product->get_meta( 'wholesale_margin' );
 		}
 
-		$margin = $product->get_meta( 'wholesale_margin' );
-
 		if ( $margin ) {
-			// NOTE: Dynamic Pricing is being used to add a 50% discount to admin orders
-			return $price / $margin;
+			return round( $price / $margin, 2 );
 		}
 
 		return $price;
@@ -232,7 +234,10 @@ class Wholesale_Order extends Admin {
 				continue;
 			}
 
-			$order_item_product->set_quantity( absint( $parts[1] ) );
+			$quantity = absint( $parts[1] );
+
+			$order_item_product->set_quantity( $quantity );
+			$order_item_product->set_total( $order_item_product->get_total() * $quantity );
 			break;
 		}
 	}

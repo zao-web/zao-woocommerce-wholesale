@@ -38,7 +38,7 @@ class Plugin extends Base {
 		$this->wholesale_users->init();
 		$this->rest_api->init();
 
-		if ( is_admin() ) {
+		if ( is_admin() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
 			$this->admin->init();
 		}
 	}
