@@ -1,5 +1,5 @@
 /**
- * Zao WooCommerce Wholesale - v0.1.0 - 2017-07-13
+ * Zao WooCommerce Wholesale - v0.1.0 - 2017-07-28
  * https://zao.is
  *
  * Copyright (c) 2017 Zao
@@ -298,7 +298,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 	app.cache = function () {
 		app.$ = {};
 		app.$.body = $(document.body);
-		app.$.select = $get('customer_user');
+		app.$.select = $get(app.select_id);
 		app.$.addItems = $('.button.add-line-item');
 		app.$.addItem = $('.button.add-order-item');
 	};
@@ -428,8 +428,14 @@ window.ZWOOWH = window.ZWOOWH || {};
 	};
 
 	app.getMoreProducts = function (page) {
-		page = page || 2;
-		var url = app.rest_url + 'wc/v2/products/?bt_limit_fields=' + productFields + '&status=publish&per_page=100&page=' + page + '&type=simple&_wpnonce=' + app.rest_nonce;
+		var offset;
+		page = page || 1;
+		if (1 === page) {
+			offset = 10;
+		}
+
+		var url = app.rest_url + 'wc/v2/products/?bt_limit_fields=' + productFields + '&status=publish&per_page=100&page=' + page + '&type=simple&_wpnonce=' + app.rest_nonce + (offset ? '&offset=' + offset : '');
+		// console.warn('getMoreProducts', url);
 
 		// console.warn('getMoreProducts, page', page);
 		var params = {
@@ -468,6 +474,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 		}
 
 		var url = app.rest_url + 'wc/v2/products/' + parentProduct.id + '/variations/?bt_limit_fields=' + productFields + '&_wpnonce=' + app.rest_nonce;
+		// console.warn('getProductVariations' + parentProduct.id, url);
 
 		if (page > 1) {
 			url += '&page=' + page;
@@ -649,6 +656,10 @@ window.ZWOOWH = window.ZWOOWH || {};
 		}).on('blur', '#quantities-form input[type=number]', function (evt) {
 			$(this).off('mousewheel.disableScroll');
 		});
+
+		if ('wholesale_user' === app.select_id) {
+			app.$.select.select2();
+		}
 
 		setTimeout(function () {
 			app.$.select.select2('open');

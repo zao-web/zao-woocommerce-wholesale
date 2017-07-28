@@ -57,17 +57,20 @@ Zao\ZaoWooCommerce_Wholesale\setup();
 
 add_filter( 'zao_woocommerce_wholesale_l10n', function( $l10n ) {
 
+	// error_log( __LINE__ .') timer_start(): '. print_r( timer_start(), true ) );
 	$url = '/wc/v2/products';
 	$request = new WP_REST_Request( 'GET', $url );
 	$request['_wpnonce'] = wp_create_nonce( 'wp_rest' );
 	$request['status'] = 'publish';
-	$request['per_page'] = 100;
+	$request['per_page'] = 10;
 	$request['type'] = 'simple';
 	$request['bt_limit_fields'] = 'id,img:40,sku,name,price,bt_product_type,manage_stock,stock_quantity,in_stock,editlink,category_names';
 
 	$response = rest_do_request( $request );
 
 	$l10n['allProducts'] = $response->data;
+
+	// error_log( __LINE__ .') time for allProducts: '. print_r( timer_stop(), true ) );
 
 	return $l10n;
 }, 10 );

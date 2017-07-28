@@ -6,6 +6,9 @@ class User {
 
 	public function init() {
 		add_action( 'wp_loaded', array( $this, 'set_up_role' ) );
+		add_action( 'user_register', array( __CLASS__, 'set_wholesale_users' ) );
+		add_action( 'profile_update', array( __CLASS__, 'set_wholesale_users' ) );
+		add_action( 'deleted_user', array( __CLASS__, 'set_wholesale_users' ) );
 	}
 
 	public function set_up_role() {
@@ -27,4 +30,23 @@ class User {
 		}
 	}
 
+	public static function get_wholesale_users() {
+		$users = get_transient( 'zwoowh_wholesale_users' );
+		if ( empty( $users ) ) {
+			$users = self::set_wholesale_users();
+		}
+
+		return $users;
+	}
+
+	public static function set_wholesale_users() {
+		$users = get_users( array(
+			'role' => 'wc_wholesaler',
+			'fields' => array( 'ID', 'display_name', 'user_email' ),
+		) );
+
+		set_transient( 'zwoowh_wholesale_users', $users, WEEK_IN_SECONDS );
+
+		return $users;
+	}
 }

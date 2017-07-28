@@ -1,6 +1,7 @@
 <?php
 
 namespace Zao\ZaoWooCommerce_Wholesale\Admin;
+use Zao\ZaoWooCommerce_Wholesale\User;
 
 /**
  * The order admin interface for wholesale orders.
@@ -67,6 +68,7 @@ class Wholesale_Order extends Admin {
 			'placeholderImgSrc' => wc_placeholder_img_src(),
 			'rest_nonce' => wp_create_nonce( 'wp_rest' ),
 			'is_wholesale' => wp_create_nonce( __FILE__ ),
+			'select_id' => self::should_replace_dropdown() ? 'wholesale_user' : 'customer_user',
 			'allProducts' => array(),
 			'productCategory' => 0,
 			'columns'      => array(
@@ -129,13 +131,62 @@ class Wholesale_Order extends Admin {
 		wp_localize_script( 'zao-woocommerce-wholesale', 'ZWOOWH', $data );
 	}
 
-	public function add_help() {
+	public static function should_replace_dropdown() {
+		static $replace_dropdown = null;
+		if ( null === $replace_dropdown ) {
+			$users = User::get_wholesale_users();
+
+			// If we have less than 500 wholesale users, let's create a snappier dropdown that doesn't require ajax searches.
+			$replace_dropdown =  empty( $users ) || count( $users ) < 500;
+
+			// But allow overriding via filter.
+			$replace_dropdown = apply_filters( 'zao_woocommerce_wholesale_replace_search_dropdown', $replace_dropdown );
+		}
+
+		return $replace_dropdown;
+	}
+
+	public function add_help( $order ) {
+		$users = User::get_wholesale_users();
+
+		// If we have less than 500 wholesale users, let's create a snappier dropdown that doesn't require ajax searches.
+		if ( self::should_replace_dropdown() ) {
+
+			$user_id = '';
+			if ( $order->get_user_id() ) {
+				$user_id = absint( $order->get_user_id() );
+			}
+
+			?>
+			<script>
+				var select = document.getElementById( 'customer_user' );
+				select.parentElement.removeChild( select );
+			</script>
+			<select class="wc-wholesale-search" id="wholesale_user" name="wholesale_user" data-placeholder="<?php esc_attr_e( 'Search for Wholesaler', 'zwoowh' ); ?>" data-allow_clear="true" style="width:99%;">
+				<option value="" <?php selected( ! $user_id ); ?>><?php esc_attr_e( 'Select Wholesaler', 'zwoowh' ); ?></option>
+				<?php foreach ( $users as $user ) {
+					/* translators: 1: user display name 2: user ID 3: user email */
+					$user_string = sprintf(
+						esc_html__( '%1$s (#%2$s - %3$s)', 'zwoowh' ),
+						$user->display_name,
+						absint( $user->ID ),
+						$user->user_email
+					); ?>
+
+				<option value="<?php echo esc_attr( $user->ID ); ?>" <?php selected( $user_id === absint( $user->ID ) ); ?>><?php echo htmlspecialchars( $user_string ); ?></option>
+
+				<?php } ?>
+			</select>
+			<?php
+
+		} else { ?>
+			<script>
+				var select = document.getElementById( 'customer_user' );
+				select.setAttribute( 'data-placeholder', '<?php echo esc_js( __( 'Search for Wholesaler', 'zwoowh' ) ); ?>' );
+				select.style.width = '99%';
+			</script>
+		<?php }
 		?>
-		<script>
-			var select = document.getElementById( 'customer_user' );
-			select.setAttribute( 'data-placeholder', '<?php echo esc_js( __( 'Search for Wholesaler', 'zwoowh' ) ); ?>' );
-			select.style.width = '99%';
-		</script>
 		<input type="hidden" name="is_wholesale" value="1" />
 		<?php
 	}
@@ -199,6 +250,14 @@ class Wholesale_Order extends Admin {
 
 	public function limit_user_search_to_wholesalers( $query ) {
 		$query->set( 'role', 'wc_wholesaler' );
+
+		$users = User::get_wholesale_users();
+
+		// Because a huge $wpdb->users.ID IN ($ids) query is probably not better for performance,
+		// We'll only set the 'include' parameter for less than 300 wholesale users.
+		if ( ! empty( $users ) && count( $users ) < 300 ) {
+			$query->set( 'include', wp_list_pluck( $users, 'ID' ) );
+		}
 	}
 
 	/**
