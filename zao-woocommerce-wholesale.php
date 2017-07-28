@@ -52,7 +52,7 @@ register_deactivation_hook( __FILE__, '\Zao\ZaoWooCommerce_Wholesale\deactivate'
 Zao\ZaoWooCommerce_Wholesale\setup();
 
 
-// The following is to be moved to a custom BT addon plugin
+// TODO: Replace the following code with an actual query limited by the 'wholesale-category' taxonomy.
 
 
 add_filter( 'zao_woocommerce_wholesale_l10n', function( $l10n ) {
