@@ -2,8 +2,6 @@
 
 namespace Zao\ZaoWooCommerce_Wholesale;
 
-require_once ZWOOWH_INC . 'vendor/Taxonomy_Single_Term/class.taxonomy-single-term.php';
-
 class Taxonomy {
 
 	const SLUG = 'wholesale-category';
@@ -29,13 +27,14 @@ class Taxonomy {
 		);
 
 		$args = array(
-			'labels'            => $labels,
-			'public'            => false,
-			'show_in_nav_menus' => false,
-			'show_admin_column' => true,
-			'hierarchical'      => false,
-			'show_tagcloud'     => false,
-			'show_ui'           => false,
+			'labels'             => $labels,
+			'public'             => false,
+			'show_in_nav_menus'  => false,
+			'publicly_queryable' => true,
+			'show_admin_column'  => true,
+			'hierarchical'       => false,
+			'show_tagcloud'      => false,
+			'show_ui'            => false,
 		);
 
 		register_taxonomy( self::SLUG, array( 'product' ), $args );
@@ -44,6 +43,8 @@ class Taxonomy {
 	}
 
 	public function set_tax_mb() {
+		require_once ZWOOWH_INC . 'vendor/Taxonomy_Single_Term/class.taxonomy-single-term.php';
+
 		// https://github.com/WebDevStudios/Taxonomy_Single_Term/
 		$this->tax_mb = new \Taxonomy_Single_Term( self::SLUG );
 
