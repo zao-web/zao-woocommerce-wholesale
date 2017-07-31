@@ -43,7 +43,7 @@ class Taxonomy {
 	}
 
 	public function set_tax_mb() {
-		require_once ZWOOWH_INC . 'vendor/Taxonomy_Single_Term/class.taxonomy-single-term.php';
+		require_once ZWOOWH_INC . 'third-party/Taxonomy_Single_Term/class.taxonomy-single-term.php';
 
 		// https://github.com/WebDevStudios/Taxonomy_Single_Term/
 		$this->tax_mb = new \Taxonomy_Single_Term( self::SLUG );
