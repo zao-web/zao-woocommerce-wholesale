@@ -27,7 +27,12 @@
 				<a v-for="category in allCategories" @click.self.prevent="search = category" href="#">{{ category }}</a>
 			</template>
 			<template slot="router">
-				<input v-model="search" class="large-text" type="search" id="search-products" :placeholder="searchPlaceholder" required>
+				<div class="zwoowh-search-products">
+					<input v-model="search" class="large-text" type="search" id="search-products" :placeholder="searchPlaceholder" required>
+				</div>
+				<div class="tablenav-pages zwoowh-counts">
+					<span class="displaying-num"><span class="zwoowh-item-count">{{ products.length }}</span> items</span> <strong class="selected-num">| <span class="zwoowh-item-count">{{ selected }}</span> selected</strong>
+				</div>
 			</template>
 
 			<form id="quantities-form">
@@ -116,6 +121,7 @@
 				reverse              : false,
 				excludeUnstocked     : true,
 				search               : '',
+				selected             : '',
 				columns              : ZWOOWH.columns,
 				searchParams         : ZWOOWH.searchParams,
 				products             : ZWOOWH.allProducts,
@@ -201,6 +207,8 @@
 					results = results.filter( this.hasStock );;
 				}
 
+				this.selected = results.length;
+
 				return results;
 			},
 
@@ -216,9 +224,10 @@
 				var self = this;
 				var i = 0
 				var x = 0;
+				var results;
 				search = self.toLowerString( search );
 
-				return this.products.filter( function( product ) {
+				results = this.products.filter( function( product ) {
 
 					return _.find( self.searchParams, function( col ) {
 
@@ -242,6 +251,10 @@
 
 					return false;
 				} );
+
+				this.selected = results.length;
+
+				return results;
 			},
 
 			toLowerString( val ) {

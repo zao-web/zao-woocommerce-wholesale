@@ -221,5 +221,22 @@
 		padding: 16px;
 	}
 
+	.media-frame-content {
+		top: 94px;
+	}
+
+	.zwoowh-search-products {
+		display: inline-block;
+		width: 70%;
+	}
+
+	.zwoowh-counts {
+		display: inline-block;
+		width: calc( 28% - 15px );
+		float: right;
+		text-align: right;
+		padding-right: 15px;
+		line-height: 3.8em;
+	}
 }
 
