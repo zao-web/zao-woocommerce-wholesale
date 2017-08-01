@@ -155,7 +155,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 	app.getProducts = function( page ) {
 		page = page || 0;
 
-		var url = app.rest_url + 'wc/v2/products/?bt_limit_fields=' + productFields + '&status=publish&wholesale=1&per_page=100&_wpnonce=' + app.rest_nonce;
+		var url = app.rest_url + 'wc/v2/products/?zwoowh_limit_fields=' + productFields + '&status=publish&wholesale=1&per_page=100&_wpnonce=' + app.rest_nonce;
 
 		if ( page > 0 ) {
 			url += '&page='+ page;
@@ -208,7 +208,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			return app.vEvent.$emit( 'variationsFetched' );
 		}
 
-		var url = app.rest_url + 'wc/v2/products/' + parentProduct.id + '/variations/?bt_limit_fields=' + productFields + '&_wpnonce=' + app.rest_nonce;
+		var url = app.rest_url + 'wc/v2/products/' + parentProduct.id + '/variations/?zwoowh_limit_fields=' + productFields + '&_wpnonce=' + app.rest_nonce;
 		// console.warn('getProductVariations' + parentProduct.id, url);
 
 		if ( page > 1 ) {

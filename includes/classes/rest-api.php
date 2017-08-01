@@ -37,11 +37,11 @@ class REST_API {
 
 	public function maybe_modify_response( $response, $handler, $request ) {
 
-		if ( ! isset( $request['bt_limit_fields'] ) ) {
+		if ( ! isset( $request['zwoowh_limit_fields'] ) ) {
 			return $response;
 		}
 
-		$filters = array_map( 'trim', explode( ',', $request['bt_limit_fields'] ) );
+		$filters = array_map( 'trim', explode( ',', $request['zwoowh_limit_fields'] ) );
 
 		if ( empty( $filters ) ) {
 			return $response;
