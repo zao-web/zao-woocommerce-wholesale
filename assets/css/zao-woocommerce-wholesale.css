@@ -79,8 +79,8 @@
 #zwoowh th.qty {
   width: 12%; }
 
-#zwoowh td.type,
-#zwoowh th.type {
+#zwoowh td.custom_tax,
+#zwoowh th.custom_tax {
   width: 15%; }
 
 #zwoowh td.name,

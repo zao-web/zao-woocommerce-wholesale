@@ -12,7 +12,6 @@ window.ZWOOWH = window.ZWOOWH || {};
 	'use strict';
 
 	var stepClasses = 'init-wholesale-order build-wholesale-order edit-wholesale-order';
-	var productFields = 'id,img:40,sku,name,price,type,bt_product_type,manage_stock,stock_quantity,in_stock,editlink,category_names';
 	var allIds = {};
 	var Vue;
 
@@ -113,20 +112,6 @@ window.ZWOOWH = window.ZWOOWH || {};
 		if ( 1 === page && ! app.vueInstance ) {
 			app.vueInstance = app.newVue( {
 				el: '#zwoowh',
-				data() {
-					return {
-						isLoading        : true,
-						modalOpen        : false,
-						sortKey          : 'bt_type',
-						reverse          : false,
-						excludeUnstocked : false,
-						search           : '',
-						columns          : app.columns,
-						searchParams     : app.searchParams,
-						products         : app.allProducts,
-					};
-				},
-				// data: data
 				render: ( createElement ) => createElement( require( './app.vue' ) )
 			} );
 
@@ -155,7 +140,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 	app.getProducts = function( page ) {
 		page = page || 0;
 
-		var url = app.rest_url + 'wc/v2/products/?zwoowh_limit_fields=' + productFields + '&status=publish&wholesale=1&per_page=100&_wpnonce=' + app.rest_nonce;
+		var url = app.rest_url + 'wc/v2/products/?zwoowh_limit_fields=' + app.productFields.join( ',' ) + '&status=publish&wholesale=1&per_page=100&_wpnonce=' + app.rest_nonce;
 
 		if ( page > 0 ) {
 			url += '&page='+ page;
@@ -169,6 +154,8 @@ window.ZWOOWH = window.ZWOOWH || {};
 			success: function( response, textStatus, request ) {
 				// console.warn('getProducts ('+ page +') response', response);
 				var totalPages = parseInt( request.getResponseHeader( 'X-WP-TotalPages' ), 10 );
+				app.maybeSetTermsTitle( request.getResponseHeader( 'X-ZWOOWH-customTaxName' ) );
+
 				var done = true;
 
 				if ( response.length ) {
@@ -208,12 +195,19 @@ window.ZWOOWH = window.ZWOOWH || {};
 			return app.vEvent.$emit( 'variationsFetched' );
 		}
 
-		var url = app.rest_url + 'wc/v2/products/' + parentProduct.id + '/variations/?zwoowh_limit_fields=' + productFields + '&_wpnonce=' + app.rest_nonce;
-		// console.warn('getProductVariations' + parentProduct.id, url);
+		if ( parentProduct.variations.length < 1 ) {
+			// Fetch the next product.
+			return app.getProductVariations();
+		}
+
+		var url = app.rest_url + 'wc/v2/products/' + parentProduct.id + '/variations/?zwoowh_limit_fields=' + app.productFields.join( ',' ) + '&status=publish&_wpnonce=' + app.rest_nonce;
+		url += '&per_page=' + ( parentProduct.variations.length + 1 ) + '&include[]=' + parentProduct.variations.join( '&include[]=' );
 
 		if ( page > 1 ) {
 			url += '&page=' + page;
 		}
+
+		// console.warn('getProductVariations ' + parentProduct.id + ', page: '+ page, url);
 		// console.warn('page', page, parentProduct.id);
 
 		var params = {
@@ -259,7 +253,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			name           : '',
 			price          : 0,
 			type           : '',
-			bt_type        : '',
+			custom_tax     : '',
 			qty            : '',
 			editlink       : '',
 			categories     : [],
@@ -305,6 +299,24 @@ window.ZWOOWH = window.ZWOOWH || {};
 		}
 
 		return msg;
+	};
+
+	app.maybeSetTermsTitle = function( title ) {
+		if ( ! title ) {
+			return;
+		}
+
+		// Set the custom tax title.
+		app.l10n.customTaxName = title;
+
+		// Allow filtering/search by the custom tax
+		app.searchParams.push( 'custom_tax' );
+
+		// Add the header/column for the custom tax.
+		app.columns.push( {
+			name : 'custom_tax',
+			title : app.l10n.customTaxName,
+		} );
 	};
 
 	// Because underscore's debounce is whack...

@@ -20,9 +20,11 @@
 				<h5 class="zwoowh-filter-title filter-link">{{ variantProductsTitle }}</h5>
 				<a v-for="parent in productParents" @click.self.prevent="search = parent" href="#">{{ parent }}</a>
 				<div class="separator"></div>
-				<h5 class="zwoowh-filter-title filter-link">{{ typesTitle }}</h5>
-				<a v-for="type in productTypes" @click.self.prevent="search = type" href="#">{{ type }}</a>
-				<div class="separator"></div>
+				<template v-if="customTaxName">
+					<h5 class="zwoowh-filter-title filter-link">{{ customTaxName }}</h5>
+					<a v-for="term in taxTerms" @click.self.prevent="search = term" href="#">{{ term }}</a>
+					<div class="separator"></div>
+				</template>
 				<h5 class="zwoowh-filter-title filter-link">{{ categoryTitle }}</h5>
 				<a v-for="category in allCategories" @click.self.prevent="search = category" href="#">{{ category }}</a>
 			</template>
@@ -54,19 +56,7 @@
 							is="product-row"
 							v-for="(product, index) in orderedProducts"
 							:index="index"
-							:id="product.id"
-							:img="product.img"
-							:sku="product.sku"
-							:name="product.name"
-							:price="product.price"
-							:parent="product.parent"
-							:type="product.bt_type"
-							:qty="product.qty"
-							:editlink="product.editlink"
-							:categories="product.categories"
-							:stock="product.stock_quantity"
-							:inStock="product.in_stock"
-							:manageStock="product.manage_stock"
+							:product="product"
 							></tr>
 						</tbody>
 					</table>
@@ -129,7 +119,7 @@
 				btnText              : ZWOOWH.l10n.addProductsBtn,
 				clearBtn             : ZWOOWH.l10n.clearBtn,
 				variantProductsTitle : ZWOOWH.l10n.variantProductsTitle,
-				typesTitle           : ZWOOWH.l10n.typesTitle,
+				customTaxName        : ZWOOWH.l10n.customTaxName,
 				categoryTitle        : ZWOOWH.l10n.categoryTitle,
 			}
 		},
@@ -153,14 +143,14 @@
 				}
 				return Object.keys( cats );
 			},
-			productTypes() {
-				var types = {};
+			taxTerms() {
+				var terms = {};
 				for (var i = 0; i < this.products.length; i++) {
-					if ( this.products[i].bt_type ) {
-						types[ this.products[i].bt_type ] = 1;
+					if ( this.products[i].custom_tax ) {
+						terms[ this.products[i].custom_tax ] = 1;
 					}
 				}
-				return Object.keys( types );
+				return Object.keys( terms );
 			},
 			orderedProducts() {
 				var sk = this.sortKey;
@@ -231,16 +221,16 @@
 
 					return _.find( self.searchParams, function( col ) {
 
-						var prodVal = self.toLowerString( product[ col ] );
+						var productColumn = self.toLowerString( product[ col ] );
 
-						if ( 'categories' === col && _.isArray( prodVal ) ) {
-							var foundCat = _.find( prodVal, ( cat ) => cat.indexOf( search ) !== -1 );
+						if ( 'categories' === col && _.isArray( productColumn ) ) {
+							var foundCat = _.find( productColumn, ( cat ) => cat.indexOf( search ) !== -1 );
 
 							if ( foundCat ) {
 								return true;
 							}
 						} else {
-							if ( prodVal && prodVal.indexOf( search ) !== -1 ) {
+							if ( productColumn && productColumn.indexOf( search ) !== -1 ) {
 								return true;
 							}
 						}

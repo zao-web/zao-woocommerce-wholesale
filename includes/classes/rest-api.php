@@ -50,6 +50,8 @@ class REST_API {
 		$is_variation_route = preg_match( '~\/wc\/v2\/products\/[0-9]+\/variations~', $request->get_route() );
 
 		if ( ! empty( $response->data ) && ! empty( $filters ) && ! is_wp_error( $response ) ) {
+			$taxonomies = array_flip( get_object_taxonomies( 'product' ) );
+
 			foreach ( $response->data as $key => $product ) {
 
 				$main_product_id = isset( $request['product_id'] ) ? absint( $request['product_id'] ) : $product['id'];
@@ -65,10 +67,14 @@ class REST_API {
 
 						$limited_product['categories'] = ! empty( $product['categories'] ) ? wp_list_pluck( $product['categories'], 'name' ) : array();
 
-					} elseif ( 'bt_product_type' === $filter ) {
+					} elseif ( isset( $taxonomies[ $filter ] ) ) {
+
+						$tax = get_taxonomy( $filter );
+
+						$response->header( 'X-ZWOOWH-customTaxName', $tax->label, true );
 
 						$terms = get_the_terms( absint( $main_product_id ), $filter );
-						$limited_product['bt_type'] = ! is_wp_error( $terms ) && isset( $terms[0]->name ) ? $terms[0]->name : '';
+						$limited_product['custom_tax'] = ! is_wp_error( $terms ) && isset( $terms[0]->name ) ? $terms[0]->name : '';
 
 					} elseif ( 'editlink' === $filter ) {
 
