@@ -425,7 +425,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			});
 
 			console.warn('Vue Modal initiated.');
-			app.vEvent.$emit('modalOpen');
+			// app.vEvent.$emit( 'modalOpen' );
 		}
 	};
 
