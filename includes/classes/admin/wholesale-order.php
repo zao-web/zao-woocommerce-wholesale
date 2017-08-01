@@ -64,14 +64,14 @@ class Wholesale_Order extends Admin {
 	public function localize_data() {
 		wp_enqueue_script( 'zao-woocommerce-wholesale' );
 		$data = apply_filters( 'zao_woocommerce_wholesale_l10n', array(
-			'rest_url' => rest_url(),
+			'rest_url'          => rest_url(),
 			'placeholderImgSrc' => wc_placeholder_img_src(),
-			'rest_nonce' => wp_create_nonce( 'wp_rest' ),
-			'is_wholesale' => wp_create_nonce( __FILE__ ),
-			'select_id' => self::should_replace_dropdown() ? 'wholesale_user' : 'customer_user',
-			'allProducts' => array(),
-			'productCategory' => 0,
-			'columns'      => array(
+			'rest_nonce'        => wp_create_nonce( 'wp_rest' ),
+			'is_wholesale'      => wp_create_nonce( __FILE__ ),
+			'select_id'         => self::should_replace_dropdown() ? 'wholesale_user' : 'customer_user',
+			'allProducts'       => array(),
+			'variableProducts'  => array(),
+			'columns'           => array(
 				array(
 					'name' => 'img',
 					'title' => __( 'Thumb', 'zwoowh' ),

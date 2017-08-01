@@ -4,8 +4,35 @@ namespace Zao\ZaoWooCommerce_Wholesale;
 
 class REST_API {
 
+	protected static $request;
+
 	public function init() {
+		add_action( 'rest_request_before_callbacks', array( $this, 'store_request' ), 10, 3 );
+		add_action( 'pre_get_posts', array( $this, 'maybe_filter_wholesale' ) );
 		add_action( 'rest_request_after_callbacks', array( $this, 'maybe_modify_response' ), 10, 3 );
+	}
+
+	public function store_request( $response, $handler, $request ) {
+		self::$request = $request;
+		return $response;
+	}
+
+	public function maybe_filter_wholesale( $query ) {
+		if ( ! empty( self::$request['wholesale'] ) ) {
+			$tax_query = $query->get( 'tax_query' );
+
+			if ( ! is_array( $tax_query ) ) {
+				$tax_query = array();
+			}
+
+			$tax_query[] = array(
+				'taxonomy' => Taxonomy::SLUG,
+				'field'    => 'slug',
+				'terms'    => array( 'wholesale-only', 'wholesale' ),
+			);
+
+			$query->set( 'tax_query', $tax_query );
+		}
 	}
 
 	public function maybe_modify_response( $response, $handler, $request ) {
@@ -24,6 +51,7 @@ class REST_API {
 
 		if ( ! empty( $response->data ) && ! empty( $filters ) && ! is_wp_error( $response ) ) {
 			foreach ( $response->data as $key => $product ) {
+
 				$main_product_id = isset( $request['product_id'] ) ? absint( $request['product_id'] ) : $product['id'];
 
 				$limited_product = array();
@@ -40,7 +68,7 @@ class REST_API {
 					} elseif ( 'bt_product_type' === $filter ) {
 
 						$terms = get_the_terms( absint( $main_product_id ), $filter );
-						$limited_product['type'] = ! is_wp_error( $terms ) && isset( $terms[0]->name ) ? $terms[0]->name : '';
+						$limited_product['bt_type'] = ! is_wp_error( $terms ) && isset( $terms[0]->name ) ? $terms[0]->name : '';
 
 					} elseif ( 'editlink' === $filter ) {
 

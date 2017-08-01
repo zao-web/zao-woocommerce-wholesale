@@ -60,7 +60,7 @@
 							:name="product.name"
 							:price="product.price"
 							:parent="product.parent"
-							:type="product.type"
+							:type="product.bt_type"
 							:qty="product.qty"
 							:editlink="product.editlink"
 							:categories="product.categories"
@@ -156,8 +156,8 @@
 			productTypes() {
 				var types = {};
 				for (var i = 0; i < this.products.length; i++) {
-					if ( this.products[i].type ) {
-						types[ this.products[i].type ] = 1;
+					if ( this.products[i].bt_type ) {
+						types[ this.products[i].bt_type ] = 1;
 					}
 				}
 				return Object.keys( types );

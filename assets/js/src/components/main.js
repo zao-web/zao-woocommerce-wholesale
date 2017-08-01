@@ -12,7 +12,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 	'use strict';
 
 	var stepClasses = 'init-wholesale-order build-wholesale-order edit-wholesale-order';
-	var productFields = 'id,img:40,sku,name,price,bt_product_type,manage_stock,stock_quantity,in_stock,editlink,category_names';
+	var productFields = 'id,img:40,sku,name,price,type,bt_product_type,manage_stock,stock_quantity,in_stock,editlink,category_names';
+	var allIds = {};
+	var Vue;
 
 	function $get( id ) {
 		return $( document.getElementById( id ) );
@@ -26,9 +28,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.$.addItem = $( '.button.add-order-item' );
 	};
 
-	app.triggerStep = function() {
-		app[ 'step' + app.whichStep() ]();
-	};
+	app.triggerStep = () => app[ 'step' + app.whichStep() ]();
 
 	app.whichStep = function() {
 		var hasCustomer = app.$.select.val();
@@ -80,41 +80,44 @@ window.ZWOOWH = window.ZWOOWH || {};
 		}
 	};
 
-	app.initVue = function( completeCb ) {
+	app.newVue = function( properties ) {
+		Vue = Vue || require( 'vue' );
+		return new Vue( properties );
+	};
+
+	app.initVue = function() {
 		if ( app.vEvent ) {
 			return;
 		}
 
 		var Vue = require( 'vue' );
-		app.vEvent = new Vue();
+		app.vEvent = app.newVue();
 
 		app.vEvent.$on( 'modalOpened', app.resizeTable );
 		app.vEvent.$on( 'productsSelected', app.addProducts );
+		app.vEvent.$on( 'productsFetched', app.initVueModal );
+		app.vEvent.$on( 'productsFetched', app.fetchVariations );
+		app.vEvent.$on( 'variationsFetched', () => app.vEvent.$emit( 'loading', false ) );
 		app.vEvent.$on( 'modalOpen', function() {
 			if ( ! app.vueInstance ) {
 				window.alert( app.l10n.plsWait );
 			}
 		} );
 
-		app.$.addItem.on( 'click', function() {
-			app.vEvent.$emit( 'modalOpen' );
-		} );
+		app.$.addItem.on( 'click', () => app.vEvent.$emit( 'modalOpen' ) );
 
-		app.prepareProducts( function() {
-			if ( app.vueInstance ) {
-				return;
-			}
+		app.getProducts( 1 );
+	};
 
-			var vueApp = require( './app.vue' );
-
-			app.vueInstance = new Vue( {
+	app.initVueModal = function( page ) {
+		if ( 1 === page && ! app.vueInstance ) {
+			app.vueInstance = app.newVue( {
 				el: '#zwoowh',
 				data() {
 					return {
 						isLoading        : true,
 						modalOpen        : false,
-						btnText          : 'Click Me',
-						sortKey          : 'type',
+						sortKey          : 'bt_type',
 						reverse          : false,
 						excludeUnstocked : false,
 						search           : '',
@@ -124,19 +127,18 @@ window.ZWOOWH = window.ZWOOWH || {};
 					};
 				},
 				// data: data
-				render: function ( createElement ) {
-					return createElement( vueApp );
-				}
+				render: ( createElement ) => createElement( require( './app.vue' ) )
 			} );
 
-			// Let's get some more.
-			app.getMoreProducts();
+			console.warn( 'Vue Modal initiated.' );
+			app.vEvent.$emit( 'modalOpen' );
+		}
+	};
 
-			if ( _.isFunction( completeCb ) ) {
-				completeCb();
-			}
-		} );
-
+	app.fetchVariations = function( page, done ) {
+		if ( done && app.variableProducts.length ) {
+			app.getProductVariations();
+		}
 	};
 
 	app.resizeTable = function() {
@@ -150,35 +152,41 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.$.productsTable.css( { 'max-height': contentH - ( thH * 3 ) } );
 	};
 
-	app.getMoreProducts = function( page ) {
-		var offset;
-		page = page || 1;
-		if ( 1 === page ) {
-			offset = 10;
+	app.getProducts = function( page ) {
+		page = page || 0;
+
+		var url = app.rest_url + 'wc/v2/products/?bt_limit_fields=' + productFields + '&status=publish&wholesale=1&per_page=100&_wpnonce=' + app.rest_nonce;
+
+		if ( page > 0 ) {
+			url += '&page='+ page;
 		}
 
-		var url = app.rest_url + 'wc/v2/products/?bt_limit_fields=' + productFields + '&status=publish&per_page=100&page=' + page + '&type=simple&_wpnonce=' + app.rest_nonce + ( offset ? '&offset=' + offset : '' );
-		// console.warn('getMoreProducts', url);
+		// console.warn('getProducts ('+ page +') url', url);
 
-		// console.warn('getMoreProducts, page', page);
 		var params = {
 			type: 'GET',
 			url: url,
-			success: function( response ) {
-				// console.warn('getMoreProducts response', response.length);
+			success: function( response, textStatus, request ) {
+				// console.warn('getProducts ('+ page +') response', response);
+				var totalPages = parseInt( request.getResponseHeader( 'X-WP-TotalPages' ), 10 );
+				var done = true;
 
 				if ( response.length ) {
 					for ( var i = 0; i < response.length; i++ ) {
 						app.addProduct( response[i] );
 					}
 
-					// Keep looping to get all products?
-					app.getMoreProducts( page + 1 );
-				} else {
-					app.vEvent.$emit( 'loading', false );
+					if ( totalPages > 1 && ( page + 1 ) <= totalPages ) {
+						done = false;
+
+						// Keep looping to get all products
+						app.getProducts( page + 1 );
+					}
 				}
+
+				app.vEvent.$emit( 'productsFetched', page, done );
 			},
-			error: function( jqXHR, textStatus, errorThrown ) {
+			error: ( jqXHR, textStatus, errorThrown ) => {
 				let err = app.errMessage( jqXHR );
 				console.warn('error', { jqXHR, textStatus, errorThrown } );
 				window.alert( err );
@@ -188,12 +196,16 @@ window.ZWOOWH = window.ZWOOWH || {};
 		$.ajax( params );
 	};
 
-	app.getProductVariations = function( completeCb, page ) {
+	app.getProductVariations = function( page, parentProduct ) {
 		page = page || 1;
 
-		var parentProduct = app.toProcess[ app.left - 1 ];
+		if ( 1 === page ) {
+			parentProduct = app.variableProducts.shift();
+		}
+
+		// console.warn('parentProduct ('+ page +')', parentProduct);
 		if ( ! parentProduct ) {
-			return completeCb();
+			return app.vEvent.$emit( 'variationsFetched' );
 		}
 
 		var url = app.rest_url + 'wc/v2/products/' + parentProduct.id + '/variations/?bt_limit_fields=' + productFields + '&_wpnonce=' + app.rest_nonce;
@@ -207,7 +219,8 @@ window.ZWOOWH = window.ZWOOWH || {};
 		var params = {
 			type: 'GET',
 			url: url,
-			success: function( response ) {
+			success: function( response, textStatus, request ) {
+				var totalPages = parseInt( request.getResponseHeader( 'X-WP-TotalPages' ), 10 );
 				// console.warn('wc api variant response', response.length);
 
 				if ( response.length ) {
@@ -216,73 +229,24 @@ window.ZWOOWH = window.ZWOOWH || {};
 						app.addProduct( response[i] );
 					}
 
-					app.getProductVariations( completeCb, page + 1 );
-				} else {
-					app.left--;
-
-					if ( app.left < 1 ) {
-						completeCb();
-					} else {
-						app.getProductVariations( completeCb );
+					if ( totalPages > 1 && ( page + 1 ) <= totalPages ) {
+						return app.getProductVariations( page + 1, parentProduct );
 					}
 				}
 
+				app.getProductVariations();
 			},
-			error: function( jqXHR, textStatus, errorThrown ) {
-				app.left--;
-
-				let err = app.errMessage( jqXHR );
-				console.error( err );
-			},
-		};
-
-		$.ajax( params );
-	};
-
-	app.prepareProducts = function( completeCb ) {
-		var url = app.rest_url + 'wc/v2/products?status=publish&type=variable&per_page=100&_wpnonce=1&_wpnonce=' + app.rest_nonce;
-		if ( app.productCategory > 0 ) {
-			url += '&category='+ app.productCategory;
-		}
-		// if ( 1 === 1 ) {
-		// 	return completeCb();
-		// }
-
-		var cbCalled = false;
-		var params = {
-			type: 'GET',
-			url: url,
-			success: function( response ) {
-				// app.allProducts = [];
-
-				if ( response.length ) {
-					app.toProcess = response;
-					app.left = response.length;
-					// console.warn('app.left', app.left);
-
-					app.getProductVariations( completeCb );
-				}
-				// else {
-				// 	completeCb();
-				// }
-
-				if ( ! cbCalled ) {
-					cbCalled = true;
-					completeCb();
-				}
-			},
-			error: function( jqXHR, textStatus, errorThrown ) {
-				let err = app.errMessage( jqXHR );
-				window.alert( err );
-				console.error('wc api response error', { jqXHR, textStatus, errorThrown } );
-			},
+			error: jqXHR => console.error( app.errMessage( jqXHR ) ),
 		};
 
 		$.ajax( params );
 	};
 
 	app.addProduct = function( product ) {
-		app.allProducts.push( app.prepareProduct( product ) );
+		product = app.prepareProduct( product );
+		if ( product ) {
+			app[ 'variable' === product.type ? 'variableProducts' : 'allProducts' ].push( product );
+		}
 	};
 
 	app.prepareProduct = function( product ) {
@@ -295,6 +259,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			name           : '',
 			price          : 0,
 			type           : '',
+			bt_type        : '',
 			qty            : '',
 			editlink       : '',
 			categories     : [],
@@ -302,6 +267,12 @@ window.ZWOOWH = window.ZWOOWH || {};
 			in_stock       : 0,
 			stock_quantity : 0,
 		} );
+
+		if ( product.id in allIds ) {
+			return false;
+		}
+
+		allIds[ product.id ] = 1;
 
 		// product.img = product.img ? product.img : 'https://via.placeholder.com/40x40';
 		product.stock_quantity = parseInt( product.stock_quantity, 10 );
@@ -348,7 +319,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 				clearTimeout( timeout );
 			}
 
-			timeout = setTimeout( function() {
+			timeout = setTimeout( () => {
 				func.apply(context, args);
 				timeout = null;
 			}, wait );
@@ -364,10 +335,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 		app.$.addItem.removeClass( 'add-order-item' ).addClass( 'add-wholesale-order-items' );
 
-		app.initVue( function() {
-			console.warn('Products initiated.');
-			// app.vEvent.$emit( 'modalOpen' );
-		} );
+		app.initVue();
 
 		app.$.select.on( 'change', app.toggleOrderBoxes );
 
@@ -375,9 +343,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 		// (to prevent Chromium browsers change the value when scrolling)
 		app.$.body
 			.on( 'focus', '#quantities-form input[type=number]', function( evt ) {
-			  $( this ).on( 'mousewheel.disableScroll', function( evt ) {
-			    evt.preventDefault();
-			  } );
+			  $( this ).on( 'mousewheel.disableScroll', evt => evt.preventDefault() );
 			} )
 			.on( 'blur', '#quantities-form input[type=number]', function( evt ) {
 			  $( this ).off( 'mousewheel.disableScroll' );
@@ -387,11 +353,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 			app.$.select.select2();
 		}
 
-		setTimeout( function() {
-			app.$.select.select2( 'open' );
-		}, 1000 );
+		setTimeout( () => app.$.select.select2( 'open' ), 1000 );
 
-		app.$.body.on( 'wc_backbone_modal_response', function( evt, target ) {
+		app.$.body.on( 'wc_backbone_modal_response', ( evt, target ) => {
 			if ( 'wc-modal-add-products' === target ) {
 				app.step3();
 			}
