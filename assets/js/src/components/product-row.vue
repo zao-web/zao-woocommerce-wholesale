@@ -6,7 +6,7 @@
 		<td class="sku">{{ product.sku }}</td>
 		<td class="name">
 			<a :href="product.editlink">{{ product.name }}</a>
-			<div v-if="parent">
+			<div v-if="product.parent">
 				Parent: <a class="filter-link" :href="product.editlink" @click.self.prevent="doParentSearch">{{ product.parent }}</a>
 			</div>
 		</td>
