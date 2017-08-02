@@ -1,11 +1,12 @@
 <?php
 
 namespace Zao\ZaoWooCommerce_Wholesale\Admin;
+use Zao\ZaoWooCommerce_Wholesale\Base;
 
 /**
  * The order admin interface for wholesale orders.
  */
-class Report extends Admin {
+class Report extends Base {
 
 	public function __construct() {}
 

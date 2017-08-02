@@ -244,7 +244,6 @@ class Wholesale_Order extends Base {
 
 			$product->update_meta_data( 'is_wholesale_order', true );
 			$product->save_meta_data();
-
 		}
 	}
 

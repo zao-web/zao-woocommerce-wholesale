@@ -1,13 +1,14 @@
 <?php
 
 namespace Zao\ZaoWooCommerce_Wholesale\Admin;
+use Zao\ZaoWooCommerce_Wholesale\Base;
 
 /**
  * The order admin interface for wholesale orders.
  *
  * @todo Limit the customer select2 to only wc_wholesaler users.
  */
-class Product extends Admin {
+class Product extends Base {
 
 	public function __construct() {}
 

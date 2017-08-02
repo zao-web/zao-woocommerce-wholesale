@@ -1,8 +1,9 @@
 <?php
 
 namespace Zao\ZaoWooCommerce_Wholesale\Admin;
+use Zao\ZaoWooCommerce_Wholesale\Base;
 
-class Menu extends Admin {
+class Menu extends Base {
 	public function __construct() {}
 
 	public function init() {
