@@ -24,7 +24,6 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.$.body      = $( document.body );
 		app.$.select    = $get( app.select_id );
 		app.$.addItems  = $( '.button.add-line-item' );
-		app.$.addItem   = $( '.button.add-order-item' );
 		app.$.lineItems = $get( 'order_line_items' );
 	};
 
@@ -104,7 +103,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			}
 		} );
 
-		app.$.addItem.on( 'click', () => app.vEvent.$emit( 'modalOpen' ) );
+		$( '#woocommerce-order-items' ).on( 'click', 'button.add-order-item', () => app.vEvent.$emit( 'modalOpen' ) );
 
 		app.getProducts( 1 );
 	};
@@ -361,7 +360,8 @@ window.ZWOOWH = window.ZWOOWH || {};
 		// TODO: Update products stock when order line items are _removed_
 		$( document ).ajaxSuccess( app.checkAjaxResponseProducts );
 
-		app.$.addItem.removeClass( 'add-order-item' ).addClass( 'add-wholesale-order-items' );
+		// Replace the WC click event w/ our own later.
+		$( '#woocommerce-order-items' ).off( 'click', 'button.add-order-item' );
 
 		app.initVue();
 
