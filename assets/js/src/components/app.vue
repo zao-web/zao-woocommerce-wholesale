@@ -98,6 +98,7 @@
 			ZWOOWH.vEvent
 				.$on( 'modalClose', this.closeModal )
 				.$on( 'modalOpen', this.openModal )
+				.$on( 'addProducts', this.addProducts )
 				.$on( 'doSearch', this.doSearch )
 				.$on( 'updateQty', this.updateQty )
 				.$on( 'removeOutOfStock', this.removeOutOfStock )
