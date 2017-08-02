@@ -16,6 +16,8 @@ class Product extends Base {
 
 		add_action( 'woocommerce_product_options_general_product_data', array( $this, 'add_wholesale_margin_input' ) );
 		add_action( 'woocommerce_process_product_meta'                , array( $this, 'save_wholesale_margin' ) );
+		add_action( 'woocommerce_update_product'                      , array( $this, 'maybe_modify_visibility' ) );
+		add_action( 'woocommerce_new_product'                         , array( $this, 'maybe_modify_visibility' ) );
 	}
 
 
@@ -40,6 +42,30 @@ class Product extends Base {
 
 		$product->update_meta_data( 'wholesale_margin', floatval( $_POST['_zwoowh_wholesale_margin'] ) );
 		$product->save_meta_data();
+	}
+
+	public function maybe_modify_visibility( $product_id ) {
+		$wholesale_terms = get_the_terms( $product_id, Taxonomy::SLUG );
+		if ( empty( $wholesale_terms ) || is_wp_error( $wholesale_terms ) ) {
+			// If no wholesale terms, nothing to do here.
+			return;
+		}
+
+		$product = wc_get_product( $product_id );
+		$visibility = $product->get_catalog_visibility();
+
+		if ( 'hidden' === $visibility ) {
+			// If product's visibility is already set to hidden, nothing to do here.
+			return;
+		}
+
+		$wholesale_terms = wp_list_pluck( $wholesale_terms, 'slug' );
+
+		// If product is set to 'wholesale-only', then we need to make the catalog visibility "hidden".
+		if ( in_array( 'wholesale-only', $wholesale_terms ) ) {
+			$product->set_catalog_visibility( 'hidden' );
+			$product->save();
+		}
 	}
 
 }
