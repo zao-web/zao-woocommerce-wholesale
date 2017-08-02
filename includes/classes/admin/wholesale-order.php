@@ -1,28 +1,22 @@
 <?php
 
 namespace Zao\ZaoWooCommerce_Wholesale\Admin;
-use Zao\ZaoWooCommerce_Wholesale\User;
+use Zao\ZaoWooCommerce_Wholesale\User, Zao\ZaoWooCommerce_Wholesale\Base;
 
 /**
  * The order admin interface for wholesale orders.
  *
  * @todo Limit the customer select2 to only wc_wholesaler users.
  */
-class Wholesale_Order extends Admin {
+class Wholesale_Order extends Base {
 	protected $is_wholesale = false;
 	protected $products = array();
+	public $quantity_management = null;
 
 	public function __construct() {
-		global $pagenow;
-
-		$this->is_wholesale = (
-			'post-new.php' === $pagenow
-			&& isset( $_GET['post_type'], $_GET['wholesale'] )
-			&& 'shop_order' === $_GET['post_type']
-		) || (
-			isset( $_REQUEST['is_wholesale'] )
-			&& wp_verify_nonce( $_REQUEST['is_wholesale'], __FILE__ )
-		);
+		if ( $this->set_is_wholesale() ) {
+			$this->quantity_management = new Quantity_Management;
+		}
 	}
 
 	public function init() {
@@ -36,6 +30,8 @@ class Wholesale_Order extends Admin {
 			return;
 		}
 
+		$this->quantity_management->init();
+
 		$order_type_object = get_post_type_object( sanitize_text_field( 'shop_order' ) );
 		$order_type_object->labels->add_new_item = __( 'Add new wholesale order', 'zwoowh' );
 
@@ -45,9 +41,6 @@ class Wholesale_Order extends Admin {
 		add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'add_help' ) );
 
 		add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
-
-		add_action( 'woocommerce_before_order_item_object_save', array( $this, 'set_item_qty' ), 10, 2 );
-
 	}
 
 	public function filter_admin_body_class( $body_class = '' ) {
@@ -59,10 +52,10 @@ class Wholesale_Order extends Admin {
 		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 		wp_enqueue_style( 'zao-woocommerce-wholesale', ZWOOWH_URL . "assets/css/zao-woocommerce-wholesale{$min}.css", array(), ZWOOWH_VERSION );
 		wp_register_script( 'zao-woocommerce-wholesale', ZWOOWH_URL . "assets/js/zao-woocommerce-wholesale{$min}.js", array(), ZWOOWH_VERSION, true );
-		add_action( 'admin_footer', array( $this, 'localize_data' ), 12 );
+		add_action( 'admin_footer', array( $this, 'enqueue_and_localize_data' ), 12 );
 	}
 
-	public function localize_data() {
+	public function enqueue_and_localize_data() {
 		wp_enqueue_script( 'zao-woocommerce-wholesale' );
 		$data = apply_filters( 'zao_woocommerce_wholesale_l10n', array(
 			'rest_url'          => rest_url(),
@@ -137,7 +130,6 @@ class Wholesale_Order extends Admin {
 			),
 		) );
 
-		// wp_die( '<xmp style="padding-left:300px">'. __LINE__ .') $data: '. print_r( $data, true ) .'</xmp>' );
 		wp_localize_script( 'zao-woocommerce-wholesale', 'ZWOOWH', $data );
 	}
 
@@ -240,7 +232,6 @@ class Wholesale_Order extends Admin {
 		}
 
 		return $price;
-
 	}
 
 	public function save_wholesale_order_meta( $post_id ) {
@@ -255,7 +246,6 @@ class Wholesale_Order extends Admin {
 			$product->save_meta_data();
 
 		}
-
 	}
 
 	public function limit_user_search_to_wholesalers( $query ) {
@@ -270,71 +260,17 @@ class Wholesale_Order extends Admin {
 		}
 	}
 
-	/**
-	 * Use the hacked together order item array keys to determine the line item quantities.
-	 *
-	 * @since 0.1.0
-	 *
-	 * @param WC_Order_Item_Product  $order_item_product
-	 * @param object  $data_store
-	 */
-	public function set_item_qty( $order_item_product, $data_store ) {
-		if ( empty( $_REQUEST['item_to_add'] ) ) {
-			return;
-		}
+	public function set_is_wholesale() {
+		global $pagenow;
 
-		$product_id = $order_item_product->get_variation_id();
-
-		if ( ! $product_id ) {
-			$product_id = absint( $order_item_product->get_product_id( 'edit' ) );
-		}
-
-		foreach ( $_REQUEST['item_to_add'] as $key => $prod_id_to_check ) {
-
-			if (
-				absint( $prod_id_to_check ) !== $product_id
-				|| 0 !== strpos( $key, $product_id . ':' )
-			) {
-				continue;
-			}
-
-			$parts = explode( ':', $key );
-			if ( empty( $parts[1] ) ) {
-				continue;
-			}
-
-			$quantity = absint( $parts[1] );
-
-			$order_item_product->set_quantity( $quantity );
-			$order_item_product->set_total( $order_item_product->get_total() * $quantity );
-
-			$this->add_product_quantity( $product_id, $quantity );
-
-			break;
-		}
+		return $this->is_wholesale = (
+			'post-new.php' === $pagenow
+			&& isset( $_GET['post_type'], $_GET['wholesale'] )
+			&& 'shop_order' === $_GET['post_type']
+		) || (
+			isset( $_REQUEST['is_wholesale'] )
+			&& wp_verify_nonce( $_REQUEST['is_wholesale'], __FILE__ )
+		);
 	}
 
-	public function add_product_quantity( $product_id, $quantity ) {
-		static $hooked = false;
-
-		if ( isset( $this->products[ $product_id ] ) ) {
-			$this->products[ $product_id ] += $quantity;
-		} else {
-			$this->products[ $product_id ] = $quantity;
-		}
-
-		if ( ! $hooked ) {
-			// A hack to send the data to the browser "just in time"
-			add_filter( 'wp_die_ajax_handler', array( $this, 'send_products_header' ) );
-			$hooked = true;
-		}
-	}
-
-	public function send_products_header( $function ) {
-
-		// Hackily sending this data back to the browser.
-		@header( 'X-ZWOOWH-products: ' . json_encode( $this->products ) );
-
-		return $function;
-	}
 }
