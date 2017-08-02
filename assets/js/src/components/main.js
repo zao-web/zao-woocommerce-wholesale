@@ -14,10 +14,14 @@ window.ZWOOWH = window.ZWOOWH || {};
 	var stepClasses = 'init-wholesale-order build-wholesale-order edit-wholesale-order';
 	var allIds = {};
 	var Vue;
+	var ENTER = 13;
+	var ESCAPE = 27;
 
 	function $get( id ) {
 		return $( document.getElementById( id ) );
 	}
+
+	app.modalOpened = false;
 
 	app.cache = function() {
 		app.$ = {};
@@ -92,6 +96,8 @@ window.ZWOOWH = window.ZWOOWH || {};
 		var Vue = require( 'vue' );
 		app.vEvent = app.newVue();
 
+		app.vEvent.$on( 'modalOpened', () => app.modalOpened = true );
+		app.vEvent.$on( 'modalClosed', () => app.modalOpened = false );
 		app.vEvent.$on( 'modalOpened', app.resizeTable );
 		app.vEvent.$on( 'productsSelected', app.addProducts );
 		app.vEvent.$on( 'productsFetched', app.initVueModal );
@@ -146,13 +152,10 @@ window.ZWOOWH = window.ZWOOWH || {};
 			url += '&page='+ page;
 		}
 
-		// console.warn('getProducts ('+ page +') url', url);
-
 		var params = {
 			type: 'GET',
 			url: url,
 			success: function( response, textStatus, request ) {
-				// console.warn('getProducts ('+ page +') response', response);
 				var totalPages = parseInt( request.getResponseHeader( 'X-WP-TotalPages' ), 10 );
 				app.maybeSetTermsTitle( request.getResponseHeader( 'X-ZWOOWH-customTaxName' ) );
 
@@ -190,7 +193,6 @@ window.ZWOOWH = window.ZWOOWH || {};
 			parentProduct = app.variableProducts.shift();
 		}
 
-		// console.warn('parentProduct ('+ page +')', parentProduct);
 		if ( ! parentProduct ) {
 			return app.vEvent.$emit( 'variationsFetched' );
 		}
@@ -207,15 +209,12 @@ window.ZWOOWH = window.ZWOOWH || {};
 			url += '&page=' + page;
 		}
 
-		// console.warn('getProductVariations ' + parentProduct.id + ', page: '+ page, url);
-		// console.warn('page', page, parentProduct.id);
 
 		var params = {
 			type: 'GET',
 			url: url,
 			success: function( response, textStatus, request ) {
 				var totalPages = parseInt( request.getResponseHeader( 'X-WP-TotalPages' ), 10 );
-				// console.warn('wc api variant response', response.length);
 
 				if ( response.length ) {
 					for ( var i = 0; i < response.length; i++ ) {
@@ -350,6 +349,18 @@ window.ZWOOWH = window.ZWOOWH || {};
 		}
 	};
 
+	app.keyboardActions = function( evt ) {
+		var key = evt.keyCode || evt.which;
+
+		if ( ENTER === key && app.modalOpened ) {
+			app.vEvent.$emit( 'addProducts' );
+		}
+
+		if ( ESCAPE === key ) {
+			app.vEvent.$emit( 'modalClose' );
+		}
+	};
+
 	app.init = function() {
 		console.warn('ZWOOWH init');
 		app.cache();
@@ -357,8 +368,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 		// Pass our wholesale nonce through every ajax call.
 		$.ajaxSetup( { data : { is_wholesale: app.is_wholesale } } );
 
-		// TODO: Update products stock when order line items are _removed_
-		$( document ).ajaxSuccess( app.checkAjaxResponseProducts );
+		$( document )
+			.ajaxSuccess( app.checkAjaxResponseProducts )
+			.on( 'keydown', app.keyboardActions );
 
 		// Replace the WC click event w/ our own later.
 		$( '#woocommerce-order-items' ).off( 'click', 'button.add-order-item' );
