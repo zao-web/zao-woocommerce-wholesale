@@ -1,6 +1,6 @@
 <?php
 
-namespace Zao\ZaoWooCommerce_Wholesale;
+namespace Zao\ZaoWooCommerce_Wholesale\Admin;
 
 class Taxonomy {
 
