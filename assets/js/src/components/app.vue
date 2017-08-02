@@ -101,6 +101,7 @@
 				.$on( 'doSearch', this.doSearch )
 				.$on( 'updateQty', this.updateQty )
 				.$on( 'removeOutOfStock', this.removeOutOfStock )
+				.$on( 'updateProductsStock', this.updateProductsStock )
 				.$on( 'loading', this.setLoading );
 		},
 		data() {
@@ -285,6 +286,23 @@
 
 			removeOutOfStock() {
 				this.excludeUnstocked = true;
+			},
+
+			updateProductsStock( productQtys ) {
+				_.each( this.products, function( product ) {
+					if ( product.id in productQtys && product.manage_stock ) {
+
+						product.stock_quantity -= productQtys[ product.id ];
+
+						if ( product.stock_quantity < 0 ) {
+							product.stock_quantity = 0;
+						}
+
+						product.in_stock = product.stock_quantity > 0;
+					}
+				} );
+
+				ZWOOWH.vEvent.$emit( 'updatedProductsStock', productQtys );
 			},
 
 			setLoading( loading ) {

@@ -10,6 +10,7 @@ use Zao\ZaoWooCommerce_Wholesale\User;
  */
 class Wholesale_Order extends Admin {
 	protected $is_wholesale = false;
+	protected $products = array();
 
 	public function __construct() {
 		global $pagenow;
@@ -306,7 +307,34 @@ class Wholesale_Order extends Admin {
 
 			$order_item_product->set_quantity( $quantity );
 			$order_item_product->set_total( $order_item_product->get_total() * $quantity );
+
+			$this->add_product_quantity( $product_id, $quantity );
+
 			break;
 		}
+	}
+
+	public function add_product_quantity( $product_id, $quantity ) {
+		static $hooked = false;
+
+		if ( isset( $this->products[ $product_id ] ) ) {
+			$this->products[ $product_id ] += $quantity;
+		} else {
+			$this->products[ $product_id ] = $quantity;
+		}
+
+		if ( ! $hooked ) {
+			// A hack to send the data to the browser "just in time"
+			add_filter( 'wp_die_ajax_handler', array( $this, 'send_products_header' ) );
+			$hooked = true;
+		}
+	}
+
+	public function send_products_header( $function ) {
+
+		// Hackily sending this data back to the browser.
+		@header( 'X-ZWOOWH-products: ' . json_encode( $this->products ) );
+
+		return $function;
 	}
 }

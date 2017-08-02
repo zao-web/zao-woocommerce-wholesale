@@ -21,10 +21,11 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 	app.cache = function() {
 		app.$ = {};
-		app.$.body = $( document.body );
-		app.$.select = $get( app.select_id );
-		app.$.addItems = $( '.button.add-line-item' );
-		app.$.addItem = $( '.button.add-order-item' );
+		app.$.body      = $( document.body );
+		app.$.select    = $get( app.select_id );
+		app.$.addItems  = $( '.button.add-line-item' );
+		app.$.addItem   = $( '.button.add-order-item' );
+		app.$.lineItems = $get( 'order_line_items' );
 	};
 
 	app.triggerStep = () => app[ 'step' + app.whichStep() ]();
@@ -32,7 +33,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 	app.whichStep = function() {
 		var hasCustomer = app.$.select.val();
 		var toAdd = false;
-		var hasItems = $( '#order_line_items .item' ).length ? true : false;
+		var hasItems = app.$.lineItems.find( '.item' ).length ? true : false;
 		var step = 3;
 		if ( ! hasItems ) {
 			step = hasCustomer ? 2 : 1;
@@ -338,12 +339,27 @@ window.ZWOOWH = window.ZWOOWH || {};
 		};
 	};
 
+	app.checkAjaxResponseProducts = function( evt, xhr ) {
+		var productQtys = xhr.getResponseHeader ? xhr.getResponseHeader( 'X-ZWOOWH-products' ) : '';
+		if ( productQtys ) {
+
+			productQtys = JSON.parse( productQtys );
+
+			if ( productQtys ) {
+				app.vEvent.$emit( 'updateProductsStock', productQtys );
+			}
+		}
+	};
+
 	app.init = function() {
 		console.warn('ZWOOWH init');
 		app.cache();
 
 		// Pass our wholesale nonce through every ajax call.
 		$.ajaxSetup( { data : { is_wholesale: app.is_wholesale } } );
+
+		// TODO: Update products stock when order line items are _removed_
+		$( document ).ajaxSuccess( app.checkAjaxResponseProducts );
 
 		app.$.addItem.removeClass( 'add-order-item' ).addClass( 'add-wholesale-order-items' );
 

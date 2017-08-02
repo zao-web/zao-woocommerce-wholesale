@@ -1,5 +1,5 @@
 /**
- * Zao WooCommerce Wholesale - v0.1.0 - 2017-08-01
+ * Zao WooCommerce Wholesale - v0.1.0 - 2017-08-02
  * https://zao.is
  *
  * Copyright (c) 2017 Zao
@@ -35,7 +35,7 @@ exports.default = {
 		ProductRow: ProductRow
 	},
 	created: function created() {
-		ZWOOWH.vEvent.$on('modalClose', this.closeModal).$on('modalOpen', this.openModal).$on('doSearch', this.doSearch).$on('updateQty', this.updateQty).$on('removeOutOfStock', this.removeOutOfStock).$on('loading', this.setLoading);
+		ZWOOWH.vEvent.$on('modalClose', this.closeModal).$on('modalOpen', this.openModal).$on('doSearch', this.doSearch).$on('updateQty', this.updateQty).$on('removeOutOfStock', this.removeOutOfStock).$on('updateProductsStock', this.updateProductsStock).$on('loading', this.setLoading);
 	},
 	data: function data() {
 		return {
@@ -221,6 +221,22 @@ exports.default = {
 		removeOutOfStock: function removeOutOfStock() {
 			this.excludeUnstocked = true;
 		},
+		updateProductsStock: function updateProductsStock(productQtys) {
+			_.each(this.products, function (product) {
+				if (product.id in productQtys && product.manage_stock) {
+
+					product.stock_quantity -= productQtys[product.id];
+
+					if (product.stock_quantity < 0) {
+						product.stock_quantity = 0;
+					}
+
+					product.in_stock = product.stock_quantity > 0;
+				}
+			});
+
+			ZWOOWH.vEvent.$emit('updatedProductsStock', productQtys);
+		},
 		setLoading: function setLoading(loading) {
 			this.isLoading = loading ? true : false;
 		},
@@ -310,6 +326,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.$.select = $get(app.select_id);
 		app.$.addItems = $('.button.add-line-item');
 		app.$.addItem = $('.button.add-order-item');
+		app.$.lineItems = $get('order_line_items');
 	};
 
 	app.triggerStep = function () {
@@ -319,7 +336,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 	app.whichStep = function () {
 		var hasCustomer = app.$.select.val();
 		var toAdd = false;
-		var hasItems = $('#order_line_items .item').length ? true : false;
+		var hasItems = app.$.lineItems.find('.item').length ? true : false;
 		var step = 3;
 		if (!hasItems) {
 			step = hasCustomer ? 2 : 1;
@@ -633,12 +650,27 @@ window.ZWOOWH = window.ZWOOWH || {};
 		};
 	};
 
+	app.checkAjaxResponseProducts = function (evt, xhr) {
+		var productQtys = xhr.getResponseHeader ? xhr.getResponseHeader('X-ZWOOWH-products') : '';
+		if (productQtys) {
+
+			productQtys = JSON.parse(productQtys);
+
+			if (productQtys) {
+				app.vEvent.$emit('updateProductsStock', productQtys);
+			}
+		}
+	};
+
 	app.init = function () {
 		console.warn('ZWOOWH init');
 		app.cache();
 
 		// Pass our wholesale nonce through every ajax call.
 		$.ajaxSetup({ data: { is_wholesale: app.is_wholesale } });
+
+		// TODO: Update products stock when order line items are _removed_
+		$(document).ajaxSuccess(app.checkAjaxResponseProducts);
 
 		app.$.addItem.removeClass('add-order-item').addClass('add-wholesale-order-items');
 
