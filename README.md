@@ -12,6 +12,10 @@ License URI:       https://opensource.org/licenses/GPL-2.0
 
 **Generate wholesale orders for WooCommerce**
 
+## Documentation
+
+View the [Plugin Wiki](https://github.com/zao-web/zao-woocommerce-wholesale/wiki)
+
 ## Installation
 
 ### Manual Installation
