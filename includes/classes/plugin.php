@@ -41,6 +41,11 @@ class Plugin extends Base {
 			$this->admin->init();
 		}
 	}
+
+	public static function static_hooks( $args ) {
+		add_filter( 'woocommerce_dynamic_pricing_process_product_discounts', array( __NAMESPACE__ . '\\Admin\\Wholesale_Order', 'remove_dynamic_pricing_if_wholesale' ) );
+	}
+
 }
 
 Plugin::get_instance();

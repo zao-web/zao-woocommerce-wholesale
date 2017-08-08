@@ -58,6 +58,7 @@ function setup() {
 
 	add_action( 'init', $n( 'i18n' ) );
 	add_action( 'init', $n( 'init' ) );
+	add_action( 'plugins_loaded', array( $n( 'Plugin' ), 'static_hooks' ) );
 
 	do_action( 'zwoowh_loaded' );
 }
