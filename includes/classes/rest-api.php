@@ -80,6 +80,19 @@ class REST_API {
 
 						$limited_product['editlink'] = get_edit_post_link( $main_product_id, 'raw' );
 
+					} elseif ( 'wholesale_price' === $filter ) {
+
+						// Margins are currently set on parent product, not per-variation
+						$_product = wc_get_product( $main_product_id );
+						$margin   = $_product->get_meta( 'wholesale_margin' );
+						$wholesale_price = $product['price'];
+
+						if ( $margin ) {
+							$wholesale_price = round( $wholesale_price / $margin, 2 );
+						}
+
+						$limited_product['wholesale_price'] = $wholesale_price;
+
 					} elseif ( $is_variation_route && 'name' === $filter && ! empty( $product['attributes'] ) ) {
 
 						$limited_product['name'] = self::attributes_name( $product );

@@ -82,7 +82,7 @@ class Wholesale_Order extends Base {
 				),
 				array(
 					'name' => 'price',
-					'title' => __( 'Price', 'zwoowh' ),
+					'title' => __( 'Wholesale Price', 'zwoowh' ),
 				),
 				array(
 					'name' => 'qty',
@@ -105,6 +105,7 @@ class Wholesale_Order extends Base {
 				'img:40',
 				'sku',
 				'name',
+				'wholesale_price',
 				'price',
 				'variations',
 				'type',
@@ -128,6 +129,7 @@ class Wholesale_Order extends Base {
 				'plsWait'              => __( 'Loading Products. Please try again in a second.', 'zwoowh' ),
 				'closeBtn'             => __( 'Close product selector', 'zwoowh' ),
 				'insertBtn'            => __( 'Insert', 'zwoowh' ),
+				'origPrice'            => __( 'Original Price: $%d', 'zwoowh' ),
 			),
 		) );
 
@@ -211,7 +213,6 @@ class Wholesale_Order extends Base {
 	 * @return [type]           [description]
 	 */
 	public function filter_wholesale_pricing( $price, $quantity, $product ) {
-
 		if ( ! is_admin() || ! current_user_can( 'publish_shop_orders' ) ) {
 			return $price;
 		}

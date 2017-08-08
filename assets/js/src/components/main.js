@@ -245,20 +245,21 @@ window.ZWOOWH = window.ZWOOWH || {};
 	app.prepareProduct = function( product ) {
 		// var getRandom = (min, max) => Math.random() * (max - min) + min;
 		_.defaults( product, {
-			id             : 0,
-			img            : [],
-			sku            : '',
-			parent         : '',
-			name           : '',
-			price          : 0,
-			type           : '',
-			custom_tax     : '',
-			qty            : '',
-			editlink       : '',
-			categories     : [],
-			manage_stock   : 0,
-			in_stock       : 0,
-			stock_quantity : 0,
+			id              : 0,
+			img             : [],
+			sku             : '',
+			parent          : '',
+			name            : '',
+			price           : 0,
+			wholesale_price : 0,
+			type            : '',
+			custom_tax      : '',
+			qty             : '',
+			editlink        : '',
+			categories      : [],
+			manage_stock    : 0,
+			in_stock        : 0,
+			stock_quantity  : 0,
 		} );
 
 		if ( product.id in allIds ) {
@@ -268,8 +269,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 		allIds[ product.id ] = 1;
 
 		// product.img = product.img ? product.img : 'https://via.placeholder.com/40x40';
-		product.stock_quantity = parseInt( product.stock_quantity, 10 );
-		product.price = product.price ? parseFloat( product.price ) : 0;
+		product.stock_quantity  = parseInt( product.stock_quantity, 10 );
+		product.price           = product.price ? parseFloat( product.price ) : 0;
+		product.wholesale_price = product.wholesale_price ? parseFloat( product.wholesale_price ) : 0;
 
 		return product;
 	};

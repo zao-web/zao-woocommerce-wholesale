@@ -10,7 +10,7 @@
 				Parent: <a class="filter-link" :href="product.editlink" @click.self.prevent="doParentSearch">{{ product.parent }}</a>
 			</div>
 		</td>
-		<td class="price">${{ formattedPrice }}</td>
+		<td class="price"><span :title="originalPriceTitle">${{ formattedWholesalePrice }}</span></td>
 		<td class="qty">
 			<template v-if="hasStock">
 				<input :tabindex="index + 1" size="3" @input="updateQty" :id="idAttr" :name="qtyName" :disabled="isDisabled" :value="product.qty" type="number" step="1" min="0" pattern="[0-9]"/><template v-if="minStock">&nbsp;<span style="inline-block">of {{ minStock }}</span></template>
@@ -58,8 +58,12 @@
 				return `quantities[${this.product.id}]`;
 			},
 
-			formattedPrice() {
-				return parseFloat( this.product.price ).toFixed(2);
+			formattedWholesalePrice() {
+				return parseFloat( this.product.wholesale_price ).toFixed(2);
+			},
+
+			originalPriceTitle() {
+				return ZWOOWH.l10n.origPrice.replace( '%d', parseFloat( this.product.price ).toFixed(2) );
 			},
 
 			hasStock() {
