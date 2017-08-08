@@ -9,30 +9,31 @@ use Zao\ZaoWooCommerce_Wholesale\User, Zao\ZaoWooCommerce_Wholesale\Base;
  * @todo Limit the customer select2 to only wc_wholesaler users.
  */
 class Wholesale_Order extends Base {
-	protected $is_wholesale = false;
+	protected static $is_wholesale = null;
+	protected static $is_edit_mode = null;
 	protected $products = array();
 	public $quantity_management = null;
 
 	public function __construct() {
-		if ( $this->set_is_wholesale() ) {
+		if ( self::is_wholesale_context() ) {
 			$this->quantity_management = new Quantity_Management;
 		}
 	}
 
 	public function init() {
-
-		add_action( 'woocommerce_process_shop_order_meta', array( $this, 'save_wholesale_order_meta' ) );
-		add_filter( 'woocommerce_get_price_excluding_tax', array( $this, 'filter_wholesale_pricing' ), 10, 3 );
-
-		add_filter( 'woocommerce_dynamic_pricing_process_product_discounts', '__return_false' );
-
-		if ( $this->is_wholesale ) {
+		if ( self::is_wholesale_context() ) {
 
 			$this->quantity_management->init();
 
 			$order_type_object = get_post_type_object( sanitize_text_field( 'shop_order' ) );
 			$order_type_object->labels->add_new_item = __( 'Add new wholesale order', 'zwoowh' );
+			if ( self::is_wholesale_edit_context() ) {
+				$order_type_object->labels->edit_item = __( 'Edit wholesale order', 'zwoowh' );
+				add_action( 'admin_footer', array( $this, 'add_wholesale_order_button' ) );
+			}
 
+			add_filter( 'woocommerce_get_price_excluding_tax', array( $this, 'filter_wholesale_pricing' ), 10, 3 );
+			add_action( 'woocommerce_process_shop_order_meta', array( $this, 'save_wholesale_order_meta' ) );
 			add_filter( 'admin_body_class'     , array( $this, 'filter_admin_body_class' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
 			add_action( 'admin_footer'         , array( $this, 'add_app' ) );
@@ -40,12 +41,12 @@ class Wholesale_Order extends Base {
 
 			add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
 		} else {
-			add_action( 'admin_footer', array( $this, 'maybe_add_wholesale_order_button' ) );
+			add_action( 'admin_head', array( $this, 'maybe_add_wholesale_order_button' ), 9999 );
 		}
 	}
 
 	public function filter_admin_body_class( $body_class = '' ) {
-		$body_class = trim( $body_class ) . ' is-wholesale-order init-wholesale-order';
+		$body_class = trim( $body_class ) . ' is-wholesale-order ' . ( self::is_wholesale_edit_context() ? 'edit-wholesale-order' : 'init-wholesale-order' );
 		return $body_class;
 	}
 
@@ -64,6 +65,7 @@ class Wholesale_Order extends Base {
 			'rest_nonce'        => wp_create_nonce( 'wp_rest' ),
 			'is_wholesale'      => wp_create_nonce( __FILE__ ),
 			'select_id'         => self::should_replace_dropdown() ? 'wholesale_user' : 'customer_user',
+			'is_edit_mode'      => self::is_wholesale_edit_context(),
 			'allProducts'       => array(),
 			'variableProducts'  => array(),
 			'columns'           => array(
@@ -192,7 +194,7 @@ class Wholesale_Order extends Base {
 			</script>
 		<?php }
 		?>
-		<input type="hidden" name="is_wholesale" value="1" />
+		<input type="hidden" name="is_wholesale" value="<?php echo wp_create_nonce( __FILE__ ); ?>" />
 		<?php
 	}
 
@@ -230,20 +232,29 @@ class Wholesale_Order extends Base {
 		}
 
 		if ( $margin ) {
-			return round( $price / $margin, 2 );
+			$price = round( $price / $margin, 2 );
 		}
 
 		return $price;
 	}
 
 	public function maybe_add_wholesale_order_button() {
-		if (
-			! function_exists( 'get_current_screen' )
-			|| 'edit' !== get_current_screen()->base
-			|| 'shop_order' !== get_current_screen()->post_type
-		) {
+		if ( ! function_exists( 'get_current_screen' ) ) {
 			return;
 		}
+
+		$screen = get_current_screen();
+
+		if (
+			is_object( $screen )
+			&& in_array( $screen->base, array( 'edit', 'post' ) )
+			&& 'shop_order' === $screen->post_type
+		) {
+			add_action( 'admin_footer', array( $this, 'add_wholesale_order_button' ) );
+		}
+	}
+
+	public function add_wholesale_order_button() {
 		?>
 		<script type="text/javascript">
 			jQuery( function( $ ) {
@@ -254,15 +265,11 @@ class Wholesale_Order extends Base {
 	}
 
 	public function save_wholesale_order_meta( $post_id ) {
+		$order = wc_get_order( $post_id );
 
-		parse_str( wp_get_referer(), $output );
-
-		if ( isset( $output['wholesale'] ) && 'true' === $output['wholesale'] ) {
-
-			$product = wc_get_order( $post_id );
-
-			$product->update_meta_data( 'is_wholesale_order', true );
-			$product->save_meta_data();
+		if ( $order ) {
+			$order->update_meta_data( 'is_wholesale_order', true );
+			$order->save_meta_data();
 		}
 	}
 
@@ -278,10 +285,38 @@ class Wholesale_Order extends Base {
 		}
 	}
 
-	public function set_is_wholesale() {
+	public static function remove_dynamic_pricing_if_wholesale( $eligible ) {
+		return $eligible && ! self::is_wholesale_context();
+	}
+
+	public static function is_wholesale_context() {
+		if ( null === self::$is_wholesale ) {
+			self::set_is_wholesale_and_edit_mode();
+		}
+
+		return self::$is_wholesale;
+	}
+
+	public static function is_wholesale_edit_context() {
+		if ( null === self::$is_edit_mode ) {
+			self::set_is_wholesale_and_edit_mode();
+		}
+
+		return self::$is_edit_mode;
+	}
+
+	protected static function set_is_wholesale_and_edit_mode() {
 		global $pagenow;
 
-		return $this->is_wholesale = (
+		self::$is_edit_mode = (
+			'post.php' === $pagenow
+			&& isset( $_GET['post'] )
+			&& 'shop_order' === get_post_type( $_GET['post'] )
+			&& ( $order = get_post( absint( $_GET['post'] ) ) )
+			&& $order->is_wholesale_order
+		);
+
+		self::$is_wholesale = self::$is_edit_mode || (
 			'post-new.php' === $pagenow
 			&& isset( $_GET['post_type'], $_GET['wholesale'] )
 			&& 'shop_order' === $_GET['post_type']

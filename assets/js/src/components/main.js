@@ -50,6 +50,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 	app.step1 = function() {
 		app.currStep = 1;
 		app.bodyClass( 'init-wholesale-order' );
+		app.$.select.select2( 'open' );
 	};
 
 	app.step2 = function() {
@@ -58,14 +59,22 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 		app.$.addItems.trigger( 'click' );
 
-		if ( app.currStep > 1 && app.vueInstance ) {
-			app.vEvent.$emit( 'modalOpen' );
+		if ( app.currStep > 1 ) {
+			app.openModal();
 		}
 	};
 
 	app.step3 = function() {
 		app.currStep = 3;
 		app.bodyClass( 'edit-wholesale-order' );
+	};
+
+	app.openModal = function() {
+		if ( app.vueInstance ) {
+			app.vEvent.$emit( 'modalOpen' );
+		} else {
+			setTimeout( app.openModal, 1000 );
+		}
 	};
 
 	app.bodyClass = function( toAdd ) {
@@ -395,14 +404,13 @@ window.ZWOOWH = window.ZWOOWH || {};
 			app.$.select.select2();
 		}
 
-		setTimeout( () => app.$.select.select2( 'open' ), 1000 );
-
 		app.$.body.on( 'wc_backbone_modal_response', ( evt, target ) => {
 			if ( 'wc-modal-add-products' === target ) {
 				app.step3();
 			}
 		} );
 
+		app.triggerStep();
 	};
 
 	$( app.init );
