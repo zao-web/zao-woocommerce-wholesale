@@ -24,8 +24,12 @@ class Menu extends Base {
 	}
 
 	public function redirect_to_new_wholesale_order() {
-		$new_order_url = admin_url( 'post-new.php?post_type=shop_order&wholesale=true' );
-		wp_safe_redirect( $new_order_url );
+		wp_safe_redirect( self::new_wholesale_order_url() );
 		exit;
 	}
+
+	public static function new_wholesale_order_url() {
+		return admin_url( 'post-new.php?post_type=shop_order&wholesale=true' );
+	}
+
 }

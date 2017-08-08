@@ -26,21 +26,22 @@ class Wholesale_Order extends Base {
 
 		add_filter( 'woocommerce_dynamic_pricing_process_product_discounts', '__return_false' );
 
-		if ( ! $this->is_wholesale ) {
-			return;
+		if ( $this->is_wholesale ) {
+
+			$this->quantity_management->init();
+
+			$order_type_object = get_post_type_object( sanitize_text_field( 'shop_order' ) );
+			$order_type_object->labels->add_new_item = __( 'Add new wholesale order', 'zwoowh' );
+
+			add_filter( 'admin_body_class'     , array( $this, 'filter_admin_body_class' ) );
+			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
+			add_action( 'admin_footer'         , array( $this, 'add_app' ) );
+			add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'add_help' ) );
+
+			add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
+		} else {
+			add_action( 'admin_footer', array( $this, 'maybe_add_wholesale_order_button' ) );
 		}
-
-		$this->quantity_management->init();
-
-		$order_type_object = get_post_type_object( sanitize_text_field( 'shop_order' ) );
-		$order_type_object->labels->add_new_item = __( 'Add new wholesale order', 'zwoowh' );
-
-		add_filter( 'admin_body_class'     , array( $this, 'filter_admin_body_class' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
-		add_action( 'admin_footer'         , array( $this, 'add_app' ) );
-		add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'add_help' ) );
-
-		add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
 	}
 
 	public function filter_admin_body_class( $body_class = '' ) {
@@ -232,6 +233,23 @@ class Wholesale_Order extends Base {
 		}
 
 		return $price;
+	}
+
+	public function maybe_add_wholesale_order_button() {
+		if (
+			! function_exists( 'get_current_screen' )
+			|| 'edit' !== get_current_screen()->base
+			|| 'shop_order' !== get_current_screen()->post_type
+		) {
+			return;
+		}
+		?>
+		<script type="text/javascript">
+			jQuery( function( $ ) {
+				$( 'a.page-title-action' ).after( '<a href="<?php echo esc_url( Menu::new_wholesale_order_url() ); ?>" class="page-title-action alignright"><?php esc_html_e( 'Add wholesale order', 'zwoowh' ); ?></a>' );
+			});
+		</script>
+		<?php
 	}
 
 	public function save_wholesale_order_meta( $post_id ) {
