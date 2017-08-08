@@ -169,7 +169,7 @@ class Wholesale_Order extends Base {
 				var select = document.getElementById( 'customer_user' );
 				select.parentElement.removeChild( select );
 			</script>
-			<select class="wc-wholesale-search" id="wholesale_user" name="wholesale_user" data-placeholder="<?php esc_attr_e( 'Search for Wholesaler', 'zwoowh' ); ?>" data-allow_clear="true" style="width:99%;">
+			<select class="wc-wholesale-search" id="wholesale_user" name="customer_user" data-placeholder="<?php esc_attr_e( 'Search for Wholesaler', 'zwoowh' ); ?>" data-allow_clear="true" style="width:99%;">
 				<option value="" <?php selected( ! $user_id ); ?>><?php esc_attr_e( 'Select Wholesaler', 'zwoowh' ); ?></option>
 				<?php foreach ( $users as $user ) {
 					/* translators: 1: user display name 2: user ID 3: user email */
