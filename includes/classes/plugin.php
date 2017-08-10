@@ -8,6 +8,8 @@ class Plugin extends Base {
 	protected $admin;
 	protected $wholesale_users;
 	protected $rest_api;
+	protected $taxonomy;
+	protected $frontend;
 
 	/**
 	 * Creates or returns an instance of this class.
@@ -25,10 +27,13 @@ class Plugin extends Base {
 	protected function __construct() {
 
 		$this->wholesale_users = new User;
-		$this->rest_api = new REST_API;
+		$this->rest_api        = new REST_API;
+		$this->taxonomy        = new Taxonomy;
 
 		if ( is_admin() ) {
 			$this->admin = new Admin\Admin;
+		} else {
+			$this->frontend = new Frontend;
 		}
 	}
 
@@ -36,13 +41,16 @@ class Plugin extends Base {
 
 		$this->wholesale_users->init();
 		$this->rest_api->init();
+		$this->taxonomy->init();
 
 		if ( is_admin() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
 			$this->admin->init();
+		} else {
+			$this->frontend->init();
 		}
 	}
 
-	public static function static_hooks( $args ) {
+	public static function static_hooks() {
 		add_filter( 'woocommerce_dynamic_pricing_process_product_discounts', array( __NAMESPACE__ . '\\Admin\\Wholesale_Order', 'remove_dynamic_pricing_if_wholesale' ) );
 	}
 

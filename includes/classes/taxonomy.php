@@ -1,6 +1,6 @@
 <?php
 
-namespace Zao\ZaoWooCommerce_Wholesale\Admin;
+namespace Zao\ZaoWooCommerce_Wholesale;
 
 class Taxonomy {
 
@@ -39,7 +39,9 @@ class Taxonomy {
 
 		register_taxonomy( self::SLUG, array( 'product' ), $args );
 
-		$this->set_tax_mb();
+		if ( is_admin() ) {
+			$this->set_tax_mb();
+		}
 	}
 
 	public function set_tax_mb() {
@@ -88,6 +90,30 @@ class Taxonomy {
 			} );
 		</script>
 		<?php
+	}
+
+	public static function get_wholesale_term( $product_id ) {
+		$wholesale_terms = get_the_terms( $product_id, self::SLUG );
+
+		if ( empty( $wholesale_terms[0] ) || is_wp_error( $wholesale_terms ) ) {
+			// If no wholesale terms, nothing to do here.
+			return false;
+		}
+
+		return $wholesale_terms[0]->slug;
+	}
+
+	public static function is_wholesale_product( $product_id ) {
+		$slug = self::get_wholesale_term( $product_id );
+		return ! empty( $slug );
+	}
+
+	public static function is_wholesale_only( $product_id ) {
+		return 'wholesale-only' === self::get_wholesale_term( $product_id );
+	}
+
+	public static function is_wholesale_and_retail( $product_id ) {
+		return 'wholesale' === self::get_wholesale_term( $product_id );
 	}
 
 }

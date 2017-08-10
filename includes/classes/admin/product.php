@@ -1,7 +1,7 @@
 <?php
 
 namespace Zao\ZaoWooCommerce_Wholesale\Admin;
-use Zao\ZaoWooCommerce_Wholesale\Base;
+use Zao\ZaoWooCommerce_Wholesale\Base, Zao\ZaoWooCommerce_Wholesale\Taxonomy;
 
 /**
  * The order admin interface for wholesale orders.
@@ -45,9 +45,7 @@ class Product extends Base {
 	}
 
 	public function maybe_modify_visibility( $product_id ) {
-		$wholesale_terms = get_the_terms( $product_id, Taxonomy::SLUG );
-		if ( empty( $wholesale_terms ) || is_wp_error( $wholesale_terms ) ) {
-			// If no wholesale terms, nothing to do here.
+		if ( ! Taxonomy::is_wholesale_only( $product_id ) ) {
 			return;
 		}
 
@@ -59,13 +57,9 @@ class Product extends Base {
 			return;
 		}
 
-		$wholesale_terms = wp_list_pluck( $wholesale_terms, 'slug' );
-
 		// If product is set to 'wholesale-only', then we need to make the catalog visibility "hidden".
-		if ( in_array( 'wholesale-only', $wholesale_terms ) ) {
-			$product->set_catalog_visibility( 'hidden' );
-			$product->save();
-		}
+		$product->set_catalog_visibility( 'hidden' );
+		$product->save();
 	}
 
 }

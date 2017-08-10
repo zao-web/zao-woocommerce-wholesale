@@ -26,7 +26,7 @@ class REST_API {
 			}
 
 			$tax_query[] = array(
-				'taxonomy' => Admin\Taxonomy::SLUG,
+				'taxonomy' => Taxonomy::SLUG,
 				'field'    => 'slug',
 				'terms'    => array( 'wholesale-only', 'wholesale' ),
 			);
