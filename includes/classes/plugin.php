@@ -55,5 +55,3 @@ class Plugin extends Base {
 	}
 
 }
-
-Plugin::get_instance();
