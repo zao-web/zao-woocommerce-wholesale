@@ -26,7 +26,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 	app.cache = function() {
 		app.$ = {};
 		app.$.body      = $( document.body );
-		app.$.select    = $get( app.select_id );
+		app.$.select    = $get( 'customer_user' );
 		app.$.addItems  = $( '.button.add-line-item' );
 		app.$.lineItems = $get( 'order_line_items' );
 	};
@@ -400,7 +400,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			  $( this ).off( 'mousewheel.disableScroll' );
 			} );
 
-		if ( 'wholesale_user' === app.select_id ) {
+		if ( app.replaceDropdown ) {
 			app.$.select.select2();
 		}
 
