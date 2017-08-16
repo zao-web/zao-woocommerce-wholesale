@@ -2,6 +2,8 @@
 
 namespace Zao\ZaoWooCommerce_Wholesale\Admin;
 use Zao\ZaoWooCommerce_Wholesale\User, Zao\ZaoWooCommerce_Wholesale\Base;
+use MichaelB\ShipStation\ShipStationApi as Shipstation_API;
+use MichaelB\ShipStation\Models\Weight as Weight;
 
 /**
  * The order admin interface for wholesale orders.
@@ -11,12 +13,18 @@ use Zao\ZaoWooCommerce_Wholesale\User, Zao\ZaoWooCommerce_Wholesale\Base;
 class Wholesale_Order extends Base {
 	protected static $is_wholesale = null;
 	protected static $is_edit_mode = null;
-	protected $products = array();
-	public $quantity_management = null;
+	protected $shipstation_api     = false;
+	protected $products            = array();
+	public $quantity_management    = null;
 
 	public function __construct() {
 		if ( self::is_wholesale_context() ) {
 			$this->quantity_management = new Quantity_Management;
+		}
+
+		// TODO: Maybe expose settings for these?
+		if ( defined( 'ZWOOWH_SHIPSTATION_API_KEY' ) && defined( 'ZWOOWH_SHIPSTATION_API_SECRET' ) ) {
+			$this->shipstation_api = new Shipstation_API( ZWOOWH_SHIPSTATION_API_KEY, ZWOOWH_SHIPSTATION_API_SECRET );
 		}
 	}
 
@@ -43,6 +51,10 @@ class Wholesale_Order extends Base {
 		} else {
 			add_action( 'admin_head', array( $this, 'maybe_add_wholesale_order_button' ), 9999 );
 		}
+	}
+
+	public function get_rates() {
+
 	}
 
 	public function filter_admin_body_class( $body_class = '' ) {
