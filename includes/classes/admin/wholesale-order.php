@@ -46,6 +46,7 @@ class Wholesale_Order extends Base {
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
 			add_action( 'admin_footer'         , array( $this, 'add_app' ) );
 			add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'add_help' ) );
+			add_action( 'woocommerce_order_item_add_action_buttons', array( $this, 'add_shipstation_rates_button' ) );
 
 			add_filter( 'woocommerce_shipstation_export_custom_field_2', array( $this, 'add_wholesale_custom_field_to_shipstation_order' ) );
 			add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
@@ -53,6 +54,14 @@ class Wholesale_Order extends Base {
 		} else {
 			add_action( 'admin_head', array( $this, 'maybe_add_wholesale_order_button' ), 9999 );
 		}
+	}
+
+	public function add_shipstation_rates_button( $order ) {
+	// TODO: Don't just check if an order has items, but if an order has shippable items.
+	 if ( count( $order->get_items() ) ) : ?>
+		<button type="button" class="button button-primary calculate-action"><?php _e( 'Get Shipstation Rates', 'zwoowh' ); ?></button>
+	<?php endif;
+
 	}
 
 	public function add_wholesale_custom_field_to_shipstation_order() {
@@ -77,7 +86,7 @@ class Wholesale_Order extends Base {
 
 		$rates    = $this->get_rates( $args );
 		$response = $rates->getBody();
-		$status   = $rates->getStatusCode(); 
+		$status   = $rates->getStatusCode();
 
 		if ( 200 === $status ) {
 			wp_send_json_success( $response );
