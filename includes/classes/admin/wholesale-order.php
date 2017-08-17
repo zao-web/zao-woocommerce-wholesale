@@ -47,14 +47,93 @@ class Wholesale_Order extends Base {
 			add_action( 'admin_footer'         , array( $this, 'add_app' ) );
 			add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'add_help' ) );
 
+			add_filter( 'woocommerce_shipstation_export_custom_field_2', array( $this, 'add_wholesale_custom_field_to_shipstation_order' ) );
 			add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
+			add_action( 'wp_ajax_get_shipstation_shipping_rates', array( $this, 'ajax_shipstation_rates' ) );
 		} else {
 			add_action( 'admin_head', array( $this, 'maybe_add_wholesale_order_button' ), 9999 );
 		}
 	}
 
-	public function get_rates() {
+	public function add_wholesale_custom_field_to_shipstation_order() {
+		return 'is_wholesale_order';
+	}
 
+	public function ajax_shipstation_rates() {
+
+		if ( ! isset( $_POST['order_id'] ) ) {
+			wp_send_json_error();
+		}
+
+		$order = wc_get_order( $_POST['order_id'] );
+
+		$args = array(
+			'order_id'       => $_POST['order_id'],
+			'fromPostalCode' => apply_filters( 'zwoowh_base_shipping_zip_code', '' ), // TODO: Expose as setting?
+			'toCountry'      => $order->get_shipping_country(),
+			'toPostalCode'   => $order->get_shipping_postcode(),
+			'weight'         => new Weight( array( 'value' => '', 'units' => '' ) ),
+		);
+
+		$rates    = $this->get_rates( $args );
+		$response = $rates->getBody(); // { 'order': {...} }
+		$status   = $rates->getStatusCode(); // 200
+
+		if ( 200 === $status ) {
+			wp_send_json_success( $response );
+		} else {
+			wp_send_json_error( $response );
+		}
+	}
+
+	public function get_order_weight( WC_Order $order ) {
+		$weight = 0;
+
+		foreach ( $order->get_items() as $item ) {
+
+			if ( $item['product_id'] > 0 ) {
+
+				$_product = $the_order->get_product_from_item( $item );
+
+				if ( ! $_product->is_virtual() ) {
+
+					$weight += $_product->get_weight() * $item['qty'];
+
+				}
+
+			}
+
+		}
+
+		return $weight;
+
+	}
+
+	/**
+	 * Gets Shipping Rates from Shipstation for a given order.
+	 *
+	 * @return [type] [description]
+	 */
+	public function get_rates( Array $args = array() ) {
+
+		$order = $args['order_id'];
+
+		$args  = apply_filters( 'zwoowh_get_wholesale_rates_args', wp_parse_args( $args, array(
+			'carrierCode'    => 'usps', // Required
+			'serviceCode'    => '',
+			'packageCode'    => '',
+			'fromPostalCode' => '', // Required
+			'toState'        => '', // Required if UPS
+			'toCountry'      => '', // Required
+			'toPostalCode'   => '', // Required
+			'toCity'         => '',
+			'weight'         => '', // Required, as a Weight object
+			'dimensions'     => null,
+			'confirmation'   => '',
+			'residential'    => false,
+		), $order ) );
+
+		return $this->shipstation_api->shipments->getRates( $args );
 	}
 
 	public function filter_admin_body_class( $body_class = '' ) {
