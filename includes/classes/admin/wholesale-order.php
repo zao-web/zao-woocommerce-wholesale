@@ -72,12 +72,12 @@ class Wholesale_Order extends Base {
 			'fromPostalCode' => apply_filters( 'zwoowh_base_shipping_zip_code', '' ), // TODO: Expose as setting?
 			'toCountry'      => $order->get_shipping_country(),
 			'toPostalCode'   => $order->get_shipping_postcode(),
-			'weight'         => new Weight( array( 'value' => '', 'units' => '' ) ),
+			'weight'         => new Weight( array( 'value' => $this->get_order_weight( $order ), 'units' => 'ounces' ) ),
 		);
 
 		$rates    = $this->get_rates( $args );
-		$response = $rates->getBody(); // { 'order': {...} }
-		$status   = $rates->getStatusCode(); // 200
+		$response = $rates->getBody();
+		$status   = $rates->getStatusCode(); 
 
 		if ( 200 === $status ) {
 			wp_send_json_success( $response );
