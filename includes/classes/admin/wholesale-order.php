@@ -102,7 +102,7 @@ class Wholesale_Order extends Base {
 
 			if ( $item['product_id'] > 0 ) {
 
-				$_product = $the_order->get_product_from_item( $item );
+				$_product = $order->get_product_from_item( $item );
 
 				if ( ! $_product->is_virtual() ) {
 
@@ -125,7 +125,7 @@ class Wholesale_Order extends Base {
 
 			if ( $item['product_id'] > 0 ) {
 
-				$_product = $the_order->get_product_from_item( $item );
+				$_product = $order->get_product_from_item( $item );
 
 				if ( $_product->needs_shipping() ) {
 
