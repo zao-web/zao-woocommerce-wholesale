@@ -4,6 +4,7 @@ namespace Zao\ZaoWooCommerce_Wholesale\Admin;
 use Zao\ZaoWooCommerce_Wholesale\User, Zao\ZaoWooCommerce_Wholesale\Base;
 use MichaelB\ShipStation\ShipStationApi as Shipstation_API;
 use MichaelB\ShipStation\Models\Weight as Weight;
+use WC_Order;
 
 /**
  * The order admin interface for wholesale orders.
