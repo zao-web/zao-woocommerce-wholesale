@@ -58,10 +58,9 @@ class Wholesale_Order extends Base {
 
 	public function add_shipstation_rates_button( $order ) {
 	// TODO: Don't just check if an order has items, but if an order has shippable items.
-	 if ( count( $order->get_items() ) ) : ?>
+	 if ( $this->order_requires_shipping( $order ) ) : ?>
 		<button type="button" class="button button-primary calculate-action"><?php _e( 'Get Shipstation Rates', 'zwoowh' ); ?></button>
 	<?php endif;
-
 	}
 
 	public function add_wholesale_custom_field_to_shipstation_order() {
@@ -116,6 +115,26 @@ class Wholesale_Order extends Base {
 
 		return $weight;
 
+	}
+
+	public function order_requires_shipping( WC_Order $order ) {
+		$needs_shipping = 0;
+
+		foreach ( $order->get_items() as $item ) {
+
+			if ( $item['product_id'] > 0 ) {
+
+				$_product = $the_order->get_product_from_item( $item );
+
+				if ( $_product->needs_shipping() ) {
+
+					$needs_shipping = true;
+					break;
+				}
+			}
+		}
+
+		return $needs_shipping;
 	}
 
 	/**
