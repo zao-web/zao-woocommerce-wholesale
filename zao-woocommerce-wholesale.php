@@ -43,7 +43,6 @@ define( 'ZWOOWH_INC',     ZWOOWH_PATH . 'includes/' );
 
 // Include files
 require_once ZWOOWH_INC . 'functions/core.php';
-require 'vendor/autoload.php';
 
 // Activation/Deactivation
 register_activation_hook( __FILE__, '\Zao\ZaoWooCommerce_Wholesale\activate' );

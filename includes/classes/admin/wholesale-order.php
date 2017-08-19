@@ -2,8 +2,6 @@
 
 namespace Zao\ZaoWooCommerce_Wholesale\Admin;
 use Zao\ZaoWooCommerce_Wholesale\User, Zao\ZaoWooCommerce_Wholesale\Base;
-use MichaelB\ShipStation\ShipStationApi as Shipstation_API;
-use MichaelB\ShipStation\Models\Weight as Weight;
 use WC_Order;
 
 /**
@@ -14,18 +12,12 @@ use WC_Order;
 class Wholesale_Order extends Base {
 	protected static $is_wholesale = null;
 	protected static $is_edit_mode = null;
-	protected $shipstation_api     = false;
 	protected $products            = array();
 	public $quantity_management    = null;
 
 	public function __construct() {
 		if ( self::is_wholesale_context() ) {
 			$this->quantity_management = new Quantity_Management;
-		}
-
-		// TODO: Maybe expose settings for these?
-		if ( defined( 'ZWOOWH_SHIPSTATION_API_KEY' ) && defined( 'ZWOOWH_SHIPSTATION_API_SECRET' ) ) {
-			$this->shipstation_api = new Shipstation_API( ZWOOWH_SHIPSTATION_API_KEY, ZWOOWH_SHIPSTATION_API_SECRET );
 		}
 	}
 
@@ -81,12 +73,11 @@ class Wholesale_Order extends Base {
 			'fromPostalCode' => apply_filters( 'zwoowh_base_shipping_zip_code', '' ), // TODO: Expose as setting?
 			'toCountry'      => $order->get_shipping_country(),
 			'toPostalCode'   => $order->get_shipping_postcode(),
-			'weight'         => new Weight( array( 'value' => $this->get_order_weight( $order ), 'units' => 'ounces' ) ),
+			'weight'         => array( 'value' => $this->get_order_weight( $order ), 'units' => 'ounces' ),
 		);
 
-		$rates    = $this->get_rates( $args );
-		$response = $rates->getBody();
-		$status   = $rates->getStatusCode();
+		$rates = $this->get_rates( $args );
+
 
 		if ( 200 === $status ) {
 			wp_send_json_success( $response );
@@ -95,6 +86,15 @@ class Wholesale_Order extends Base {
 		}
 	}
 
+	/**
+	 * Gets order weight.
+	 *
+	 * @todo In Customizations, modify order weight to include virtual printed patterns if first domestic order, or if order is international.
+	 * @todo In order to do the above, we need a custom weight field exposed.
+	 * 
+	 * @param  WC_Order $order [description]
+	 * @return [type]          [description]
+	 */
 	public function get_order_weight( WC_Order $order ) {
 		$weight = 0;
 
@@ -114,7 +114,7 @@ class Wholesale_Order extends Base {
 
 		}
 
-		return $weight;
+		return apply_filters( 'zwoowh_get_order_weight', $weight, $order );
 
 	}
 
@@ -147,8 +147,8 @@ class Wholesale_Order extends Base {
 
 		$order = $args['order_id'];
 
-		$args  = apply_filters( 'zwoowh_get_wholesale_rates_args', wp_parse_args( $args, array(
-			'carrierCode'    => 'usps', // Required
+		$body  = apply_filters( 'zwoowh_get_wholesale_rates_args', wp_parse_args( $args, array(
+			'carrierCode'    => 'stamps_com', // Required
 			'serviceCode'    => '',
 			'packageCode'    => '',
 			'fromPostalCode' => '', // Required
@@ -157,12 +157,16 @@ class Wholesale_Order extends Base {
 			'toPostalCode'   => '', // Required
 			'toCity'         => '',
 			'weight'         => '', // Required, as a Weight object
-			'dimensions'     => null,
-			'confirmation'   => '',
-			'residential'    => false,
 		), $order ) );
 
-		return $this->shipstation_api->shipments->getRates( $args );
+		$args = array(
+			'headers' => array(
+				'Authorization' => 'Basic ' . base64_encode( ZWOOWH_SHIPSTATION_API_KEY . ':' . ZWOOWH_SHIPSTATION_API_SECRET ),
+			),
+			'body'    => $body
+		);
+
+		return wp_remote_post( 'https://ssapi.shipstation.com/shipments/getrates', $args );
 	}
 
 	public function filter_admin_body_class( $body_class = '' ) {
