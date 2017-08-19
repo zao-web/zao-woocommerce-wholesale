@@ -76,22 +76,23 @@ class Wholesale_Order extends Base {
 			'weight'         => array( 'value' => $this->get_order_weight( $order ), 'units' => 'ounces' ),
 		);
 
-		$rates = $this->get_rates( $args );
-
+		$response = $this->get_rates( $args );
+		$rates    = wp_remote_retrieve_body( $response );
+		$status   = wp_remote_retrieve_response_code( $response );
 
 		if ( 200 === $status ) {
-			wp_send_json_success( $response );
+			wp_send_json_success( $rates );
 		} else {
-			wp_send_json_error( $response );
+			wp_send_json_error( $rates );
 		}
 	}
 
 	/**
 	 * Gets order weight.
 	 *
-	 * @todo In Customizations, modify order weight to include virtual printed patterns if first domestic order, or if order is international.
+	 * @todo In Customizations, modify order weight to include virtual printed patterns if order is international.
 	 * @todo In order to do the above, we need a custom weight field exposed.
-	 * 
+	 *
 	 * @param  WC_Order $order [description]
 	 * @return [type]          [description]
 	 */
