@@ -4,9 +4,7 @@ namespace Zao\ZaoWooCommerce_Wholesale\Admin;
 use Zao\ZaoWooCommerce_Wholesale\Base;
 
 /**
- * The order admin interface for wholesale orders.
- *
- * @todo Limit the customer select2 to only wc_wholesaler users.
+ * Handling quantities for the wholesale management interface.
  */
 class Quantity_Management extends Base {
 	protected $products = array();
