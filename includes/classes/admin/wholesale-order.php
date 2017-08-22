@@ -46,7 +46,7 @@ class Wholesale_Order extends Base {
 
 			add_filter( 'woocommerce_shipstation_export_custom_field_2', array( $this, 'add_wholesale_custom_field_to_shipstation_order' ) );
 			add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
-			add_action( 'wp_ajax_get_shipstation_shipping_rates', array( $this, 'ajax_shipstation_rates' ) );
+			add_action( 'wp_ajax_get_shipstation_rates', array( $this, 'ajax_shipstation_rates' ) );
 		} else {
 			add_action( 'admin_head', array( $this, 'maybe_add_wholesale_order_button' ), 9999 );
 		}
