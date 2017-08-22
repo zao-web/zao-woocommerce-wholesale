@@ -28,10 +28,15 @@ class Wholesale_Order extends Base {
 
 			$order_type_object = get_post_type_object( sanitize_text_field( 'shop_order' ) );
 			$order_type_object->labels->add_new_item = __( 'Add new wholesale order', 'zwoowh' );
+
 			if ( self::is_wholesale_edit_context() ) {
 				$order_type_object->labels->edit_item = __( 'Edit wholesale order', 'zwoowh' );
 				add_action( 'admin_footer', array( $this, 'add_wholesale_order_button' ) );
 			}
+
+			// TODO: Update shipping method with Shipstation Method
+			// TODO: Also set via set_shipping_total()
+			// add_filter( 'woocommerce_order_shipping_method' )
 
 			add_filter( 'woocommerce_get_price_excluding_tax', array( $this, 'filter_wholesale_pricing' ), 10, 3 );
 			add_action( 'woocommerce_process_shop_order_meta', array( $this, 'save_wholesale_order_meta' ) );
@@ -50,9 +55,8 @@ class Wholesale_Order extends Base {
 	}
 
 	public function add_shipstation_rates_button( $order ) {
-	// TODO: Don't just check if an order has items, but if an order has shippable items.
-	 if ( $this->order_requires_shipping( $order ) ) : ?>
-		<button type="button" class="button button-primary calculate-action"><?php _e( 'Get Shipstation Rates', 'zwoowh' ); ?></button>
+	 if ( $this->can_be_shipped( $order ) ) : ?>
+		<button type="button" class="button button-primary get-rates"><?php _e( 'Get Shipstation Rates', 'zwoowh' ); ?></button>
 	<?php endif;
 	}
 
@@ -76,11 +80,9 @@ class Wholesale_Order extends Base {
 			'weight'         => array( 'value' => $this->get_order_weight( $order ), 'units' => 'ounces' ),
 		);
 
-		$response = $this->get_rates( $args );
-		$rates    = wp_remote_retrieve_body( $response );
-		$status   = wp_remote_retrieve_response_code( $response );
+		$rates = $this->get_rates( $args );
 
-		if ( 200 === $status ) {
+		if ( ! empty( $rates ) ) {
 			wp_send_json_success( $rates );
 		} else {
 			wp_send_json_error( $rates );
@@ -119,8 +121,9 @@ class Wholesale_Order extends Base {
 
 	}
 
-	public function order_requires_shipping( WC_Order $order ) {
-		$needs_shipping = 0;
+
+	public function can_be_shipped( WC_Order $order ) {
+		$needs_shipping = false;
 
 		foreach ( $order->get_items() as $item ) {
 
@@ -136,7 +139,7 @@ class Wholesale_Order extends Base {
 			}
 		}
 
-		return $needs_shipping;
+		return apply_filters( 'zwoowh_order_can_be_shipped', $needs_shipping, $order );
 	}
 
 	/**
@@ -167,7 +170,17 @@ class Wholesale_Order extends Base {
 			'body'    => $body
 		);
 
-		return wp_remote_post( 'https://ssapi.shipstation.com/shipments/getrates', $args );
+		$response = wp_remote_post( 'https://ssapi.shipstation.com/shipments/getrates', $args );
+
+		$status   = wp_remote_retrieve_response_code( $response );
+
+		if ( 200 === $status ) {
+			$rates = json_decode( wp_remote_retrieve_body( $response ) );
+		} else {
+			$rates = array();
+		}
+
+		return apply_filters( 'zwoowh_get_rates', $rates, $args, $response );
 	}
 
 	public function filter_admin_body_class( $body_class = '' ) {
