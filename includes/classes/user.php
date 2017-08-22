@@ -10,6 +10,7 @@ class User {
 		add_action( 'user_register', array( __CLASS__, 'set_wholesale_users' ) );
 		add_action( 'profile_update', array( __CLASS__, 'set_wholesale_users' ) );
 		add_action( 'deleted_user', array( __CLASS__, 'set_wholesale_users' ) );
+		add_action( 'zwoowh_set_wholesale_users', array( __CLASS__, 'set_wholesale_users' ) );
 	}
 
 	public function set_up_role() {
