@@ -41,10 +41,10 @@ class User {
 	}
 
 	public static function set_wholesale_users() {
-		$users = get_users( array(
+		$users = get_users( apply_filters( 'zwoowh_set_wholesale_users_args', array(
 			'role' => self::ROLE,
 			'fields' => array( 'ID', 'display_name', 'user_email' ),
-		) );
+		) ) );
 
 		set_transient( 'zwoowh_wholesale_users', $users, WEEK_IN_SECONDS );
 
