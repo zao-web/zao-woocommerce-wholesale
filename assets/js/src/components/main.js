@@ -186,8 +186,8 @@ window.ZWOOWH = window.ZWOOWH || {};
 				app.vEvent.$emit( 'productsFetched', page, done );
 			},
 			error: ( jqXHR, textStatus, errorThrown ) => {
-				let err = app.errMessage( jqXHR );
-				console.warn('error', { jqXHR, textStatus, errorThrown } );
+				let err = app.errMessage( jqXHR, textStatus, errorThrown );
+				console.warn( 'error', { jqXHR, textStatus, errorThrown } );
 				window.alert( err );
 			},
 		};
@@ -300,12 +300,20 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.vEvent.$emit( 'modalClose' );
 	};
 
-	app.errMessage = function( jqXHR ) {
+	app.errMessage = function( jqXHR, textStatus, errorThrown ) {
 		var msg = app.l10n.somethingWrong;
 		var err = jqXHR.responseJSON;
 
 		if ( err && err.code && err.message ) {
 			msg = jqXHR.status + ' ' + err.code + ' - ' + err.message;
+		}
+
+		if ( errorThrown ) {
+			msg += ' ' + app.l10n.msgReceived;
+			msg += "\n\n" + errorThrown;
+			if ( textStatus ) {
+				msg += ' (' + textStatus + ')';
+			}
 		}
 
 		return msg;
