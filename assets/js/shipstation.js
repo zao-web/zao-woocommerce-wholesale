@@ -16,7 +16,6 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 	ship.cache = function() {
 		app.$.get_rates_button = app.$get( 'get_shipstation_rates' );
-		app.$.set_rates_button = $( 'set_shipstation_rates' );
 		app.$.shipSpinner      = $( '.shipstation-spinner' );
 		ship.order_id          = $( '#post_ID' ).val();
 	};
@@ -25,11 +24,17 @@ window.ZWOOWH = window.ZWOOWH || {};
 		ship.cache();
 
 		app.$.get_rates_button.on( 'click', ship.getRates );
-		app.$.set_rates_button.on( 'click', ship.setRates );
 	};
 
 	ship.setRates = function( evt ) {
+		app.$.shipSpinner.addClass( 'is-active' );
 
+		var $this = $( this );
+		var price = $this.data( 'price' );
+		var value = $this.val();
+
+		console.log( price );
+		console.log( value );
 	};
 
 	ship.getRates = function( evt ) {
@@ -50,6 +55,8 @@ window.ZWOOWH = window.ZWOOWH || {};
 			} );
 
 			$select.select2();
+			$select.on( 'change', app.setRates );
+
 			app.$.shipSpinner.removeClass( 'is-active' );
 
 		}, 'json' );
