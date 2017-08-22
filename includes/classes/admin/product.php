@@ -4,9 +4,7 @@ namespace Zao\ZaoWooCommerce_Wholesale\Admin;
 use Zao\ZaoWooCommerce_Wholesale\Base, Zao\ZaoWooCommerce_Wholesale\Taxonomy;
 
 /**
- * The order admin interface for wholesale orders.
- *
- * @todo Limit the customer select2 to only wc_wholesaler users.
+ * Modifications to Woo Products.
  */
 class Product extends Base {
 

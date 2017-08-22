@@ -6,8 +6,6 @@ use WC_Order;
 
 /**
  * The order admin interface for wholesale orders.
- *
- * @todo Limit the customer select2 to only wc_wholesaler users.
  */
 class Wholesale_Order extends Base {
 	protected static $is_wholesale = null;
