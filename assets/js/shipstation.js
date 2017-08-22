@@ -17,20 +17,20 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 	app.shipstationModalOpened = false;
 
-	app.cache = function() {
-		app.$                  = {};
-		app.$.body             = $( document.body );
-		app.$.get_rates_button = $get( 'get_shipstation_rates' );
-		app.$.set_rates_button = $get( 'set_shipstation_rates' );
-		app.$.spinner          = $( '.shipstation-spinner' );
-		app.$.order_id         = $( '#post_ID' ).val();
+	app.ss_cache = function() {
+		app.$s                  = {};
+		app.$s.body              = $( document.body );
+		app.$s.get_rates_button  = $get( 'get_shipstation_rates' );
+		app.$s.set_rates_button  = $get( 'set_shipstation_rates' );
+		app.$s.spinner           = $( '.shipstation-spinner' );
+		app.$s.order_id          = $( '#post_ID' ).val();
 	};
 
 	app.init = function() {
-		app.cache();
+		app.ss_cache();
 
-		app.$.get_rates_button.on( 'click', app.getRates );
-		app.$.set_rates_button.on( 'click', app.setRates );
+		app.$s.get_rates_button.on( 'click', app.getRates );
+		app.$s.set_rates_button.on( 'click', app.setRates );
 	};
 
 	app.setRates = function( evt ) {
@@ -38,9 +38,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 	};
 
 	app.getRates = function( evt ) {
-		app.$.spinner.addClass( 'is-active' );
+		app.$s.spinner.addClass( 'is-active' );
 
-		$.post( ajaxurl, { action : get_shipstation_rates, order_id : app.$.order_id }, function( response ) {
+		$.post( ajaxurl, { action : get_shipstation_rates, order_id : app.$s.order_id }, function( response ) {
 			console.log( response );
 		}, 'json' );
 	};
