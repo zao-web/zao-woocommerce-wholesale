@@ -54,7 +54,7 @@ class Wholesale_Order extends Base {
 
 	public function add_shipstation_rates_button( $order ) {
 	 if ( $this->can_be_shipped( $order ) ) : ?>
-		<span class="shipstation-spinner spinner" style="float: none; vertical-align: top;"></span><button type="button" id="get_shipstation_rates" class="button button-primary get-rates"><?php _e( 'Get Shipstation Rates', 'zwoowh' ); ?></button>
+		<span class="shipstation-spinner spinner" style="float: none; vertical-align: top;"></span><button type="button" id="get_shipstation_rates" class="button button-primary get-rates" style="margin-left:1em"><?php _e( 'Get Shipstation Rates', 'zwoowh' ); ?></button>
 	<?php endif;
 	}
 
