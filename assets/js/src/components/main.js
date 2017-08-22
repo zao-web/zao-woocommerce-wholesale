@@ -21,6 +21,8 @@ window.ZWOOWH = window.ZWOOWH || {};
 		return $( document.getElementById( id ) );
 	}
 
+	app.$get = $get;
+
 	app.modalOpened = false;
 
 	app.cache = function() {

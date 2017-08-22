@@ -11,40 +11,37 @@ window.ZWOOWH = window.ZWOOWH || {};
 ( function( window, document, $, app, undefined ) {
 	'use strict';
 
-	function $get( id ) {
-		return $( document.getElementById( id ) );
-	}
+	app.shipStation = {};
+	var ship = app.shipStation;
 
-	app.shipstationModalOpened = false;
+	// ship.modalOpened = false;
 
-	app.ss_cache = function() {
-		app.$s                  = {};
-		app.$s.body              = $( document.body );
-		app.$s.get_rates_button  = $get( 'get_shipstation_rates' );
-		app.$s.set_rates_button  = $get( 'set_shipstation_rates' );
-		app.$s.spinner           = $( '.shipstation-spinner' );
-		app.$s.order_id          = $( '#post_ID' ).val();
+	ship.cache = function() {
+		app.$.get_rates_button = app.$get( 'get_shipstation_rates' );
+		app.$.set_rates_button = app.$get( 'set_shipstation_rates' );
+		app.$.shipSpinner      = $( '.shipstation-spinner' );
+		ship.order_id          = app.$get( 'post_ID' ).val();
 	};
 
-	app.init = function() {
-		app.ss_cache();
+	ship.init = function() {
+		ship.cache();
 
-		app.$s.get_rates_button.on( 'click', app.getRates );
-		app.$s.set_rates_button.on( 'click', app.setRates );
+		app.$.get_rates_button.on( 'click', ship.getRates );
+		app.$.set_rates_button.on( 'click', ship.setRates );
 	};
 
-	app.setRates = function( evt ) {
+	ship.setRates = function( evt ) {
 
 	};
 
-	app.getRates = function( evt ) {
-		app.$s.spinner.addClass( 'is-active' );
+	ship.getRates = function( evt ) {
+		app.$.shipSpinner.addClass( 'is-active' );
 
-		$.post( ajaxurl, { action : get_shipstation_rates, order_id : app.$s.order_id }, function( response ) {
+		$.post( window.ajaxurl, { action : 'get_shipstation_rates', order_id : ship.order_id }, function( response ) {
 			console.log( response );
 		}, 'json' );
 	};
 
-	$( app.init );
+	$( ship.init );
 
 } )( window, document, jQuery, window.ZWOOWH );
