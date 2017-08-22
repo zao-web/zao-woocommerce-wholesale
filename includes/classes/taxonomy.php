@@ -92,6 +92,14 @@ class Taxonomy {
 		<?php
 	}
 
+	public static function set_wholesale_term( $product_id, $slug = 'wholesale-only' ) {
+		if ( false === $slug ) {
+			return wp_delete_object_term_relationships( $product_id, self::SLUG );
+		}
+
+		return wp_set_object_terms( $product_id, 'wholesale-only' === $slug ? 'wholesale-only' : 'wholesale', self::SLUG );
+	}
+
 	public static function get_wholesale_term( $product_id ) {
 		$wholesale_terms = get_the_terms( $product_id, self::SLUG );
 
