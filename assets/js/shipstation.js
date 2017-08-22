@@ -43,6 +43,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			console.log( response );
 
 			var $select = $( '<select id="shipstation-rates" />' ).insertBefore( app.$.get_rates_button );
+			$select.append( '<option value="">' + app.l10n.selectShipping + '</option>' );
 
 			$.each( response.data, function( i, v ) {
 				$select.append( '<option data-price="' + v.shipmentCost.toFixed(2) + '" value="' + v.serviceCode + '">' + v.serviceName + ' - $' + v.shipmentCost.toFixed(2) + '</option>' );

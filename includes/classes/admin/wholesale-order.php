@@ -271,6 +271,7 @@ class Wholesale_Order extends Base {
 				'closeBtn'             => __( 'Close product selector', 'zwoowh' ),
 				'insertBtn'            => __( 'Insert', 'zwoowh' ),
 				'origPrice'            => __( 'Original Price: $%d', 'zwoowh' ),
+				'selectShipping'       => __( 'Select a shipping rate', 'zwoowh' ),
 			),
 		) );
 
