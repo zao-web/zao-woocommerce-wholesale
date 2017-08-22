@@ -20,7 +20,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.$.get_rates_button = app.$get( 'get_shipstation_rates' );
 		app.$.set_rates_button = $( 'set_shipstation_rates' );
 		app.$.shipSpinner      = $( '.shipstation-spinner' );
-		ship.order_id          = $( 'post_ID' ).val();
+		ship.order_id          = $( '#post_ID' ).val();
 	};
 
 	ship.init = function() {
