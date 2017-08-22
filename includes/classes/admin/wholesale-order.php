@@ -258,6 +258,7 @@ class Wholesale_Order extends Base {
 			'allCategories' => get_terms( 'product_cat', array( 'fields' => 'names', 'update_term_meta_cache' => false ) ),
 			'l10n' => array(
 				'somethingWrong'       => __( 'Something went wrong and we were not able to retrieve the wholesale products.', 'zwoowh' ),
+				'msgReceived'          => __( 'The error found:', 'zwoowh' ),
 				'noStockTitle'         => __( 'This item is out of stock.', 'zwoowh' ),
 				'addProductsBtn'       => __( 'Add Products', 'zwoowh' ),
 				'clearBtn'             => __( 'Clear', 'zwoowh' ),
