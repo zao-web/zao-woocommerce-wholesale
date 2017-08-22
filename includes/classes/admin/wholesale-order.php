@@ -54,7 +54,7 @@ class Wholesale_Order extends Base {
 
 	public function add_shipstation_rates_button( $order ) {
 	 if ( $this->can_be_shipped( $order ) ) : ?>
-		<button type="button" class="button button-primary get-rates"><?php _e( 'Get Shipstation Rates', 'zwoowh' ); ?></button>
+		<span class="shipstation-spinner spinner" style="float: none; vertical-align: top;"></span><button type="button" id="get_shipstation_rates" class="button button-primary get-rates"><?php _e( 'Get Shipstation Rates', 'zwoowh' ); ?></button>
 	<?php endif;
 	}
 
@@ -190,11 +190,13 @@ class Wholesale_Order extends Base {
 		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 		wp_enqueue_style( 'zao-woocommerce-wholesale', ZWOOWH_URL . "assets/css/zao-woocommerce-wholesale{$min}.css", array(), ZWOOWH_VERSION );
 		wp_register_script( 'zao-woocommerce-wholesale', ZWOOWH_URL . "assets/js/zao-woocommerce-wholesale{$min}.js", array(), ZWOOWH_VERSION, true );
+		wp_register_script( 'zao-woocommerce-wholesale', ZWOOWH_URL . "assets/js/shipstation{$min}.js", array(), ZWOOWH_VERSION, true );
 		add_action( 'admin_footer', array( $this, 'enqueue_and_localize_data' ), 12 );
 	}
 
 	public function enqueue_and_localize_data() {
 		wp_enqueue_script( 'zao-woocommerce-wholesale' );
+		wp_enqueue_script( 'zao-woocommerce-wholesale-shipstation' );
 		$data = apply_filters( 'zao_woocommerce_wholesale_l10n', array(
 			'rest_url'          => rest_url(),
 			'placeholderImgSrc' => wc_placeholder_img_src(),
