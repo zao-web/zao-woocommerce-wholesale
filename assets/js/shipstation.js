@@ -17,7 +17,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 	// ship.modalOpened = false;
 
 	ship.cache = function() {
-		app.$.get_rates_button = $( 'get_shipstation_rates' );
+		app.$.get_rates_button = app.$get( 'get_shipstation_rates' );
 		app.$.set_rates_button = $( 'set_shipstation_rates' );
 		app.$.shipSpinner      = $( '.shipstation-spinner' );
 		ship.order_id          = $( 'post_ID' ).val();
