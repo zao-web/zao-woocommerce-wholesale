@@ -3,6 +3,7 @@
 namespace Zao\ZaoWooCommerce_Wholesale;
 
 class User {
+	const ROLE = 'wc_wholesaler';
 
 	public function init() {
 		add_action( 'wp_loaded', array( $this, 'set_up_role' ) );
@@ -17,7 +18,7 @@ class User {
 		}
 
 		$roles = add_role(
-			'wc_wholesaler',
+			self::ROLE,
 			__( 'Wholesaler' ),
 			array(
 				'read'            => true,
@@ -41,7 +42,7 @@ class User {
 
 	public static function set_wholesale_users() {
 		$users = get_users( array(
-			'role' => 'wc_wholesaler',
+			'role' => self::ROLE,
 			'fields' => array( 'ID', 'display_name', 'user_email' ),
 		) );
 

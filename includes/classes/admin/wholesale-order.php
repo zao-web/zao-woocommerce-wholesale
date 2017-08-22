@@ -397,7 +397,7 @@ class Wholesale_Order extends Base {
 	}
 
 	public function limit_user_search_to_wholesalers( $query ) {
-		$query->set( 'role', 'wc_wholesaler' );
+		$query->set( 'role', User::ROLE );
 
 		$users = User::get_wholesale_users();
 
