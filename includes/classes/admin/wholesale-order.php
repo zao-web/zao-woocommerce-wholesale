@@ -6,8 +6,6 @@ use WC_Order;
 
 /**
  * The order admin interface for wholesale orders.
- *
- * @todo Limit the customer select2 to only wc_wholesaler users.
  */
 class Wholesale_Order extends Base {
 	protected static $is_wholesale = null;
@@ -412,7 +410,7 @@ class Wholesale_Order extends Base {
 	}
 
 	public function limit_user_search_to_wholesalers( $query ) {
-		$query->set( 'role', 'wc_wholesaler' );
+		$query->set( 'role', User::ROLE );
 
 		$users = User::get_wholesale_users();
 
