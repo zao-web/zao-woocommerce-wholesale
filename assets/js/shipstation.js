@@ -54,8 +54,8 @@ window.ZWOOWH = window.ZWOOWH || {};
 				$select.append( '<option data-price="' + v.shipmentCost.toFixed(2) + '" value="' + v.serviceCode + '">' + v.serviceName + ' - $' + v.shipmentCost.toFixed(2) + '</option>' );
 			} );
 
-			$select.select2();
-			$select.on( 'select2:select', app.setRates );
+			var select2 = $select.select2();
+			select2.on( 'select2:select', app.setRates );
 
 			app.$.shipSpinner.removeClass( 'is-active' );
 
