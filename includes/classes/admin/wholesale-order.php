@@ -132,8 +132,7 @@ class Wholesale_Order extends Base {
 	/**
 	 * Gets order weight.
 	 *
-	 * @todo In Customizations, modify order weight to include virtual printed patterns if order is international.
-	 * @todo In order to do the above, we need a custom weight field exposed.
+	 * @todo abstract customization to plugin.
 	 *
 	 * @param  WC_Order $order [description]
 	 * @return [type]          [description]
@@ -141,15 +140,24 @@ class Wholesale_Order extends Base {
 	public function get_order_weight( WC_Order $order ) {
 		$weight = 0;
 
+		$shipping_country = $order->get_shipping_country();
+
+		$is_international = ! empty( $shipping_country ) && 'US' !== $shipping_country;
+
 		foreach ( $order->get_items() as $item ) {
 
 			if ( $item['product_id'] > 0 ) {
 
-				$_product = $order->get_product_from_item( $item );
+				$_product         = $order->get_product_from_item( $item );
+				$product_has_virtual_weight = $_product->get_meta( 'virtual_product_weight' );
 
 				if ( ! $_product->is_virtual() ) {
 
 					$weight += $_product->get_weight() * $item['qty'];
+
+				} else if ( $is_international && $product_has_virtual_weight  ) {
+
+					$weight += $product_has_virtual_weight * $item['qty'];
 
 				}
 
@@ -158,9 +166,7 @@ class Wholesale_Order extends Base {
 		}
 
 		return apply_filters( 'zwoowh_get_order_weight', $weight, $order );
-
 	}
-
 
 	public function can_be_shipped( WC_Order $order ) {
 		$needs_shipping = false;

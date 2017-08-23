@@ -13,7 +13,8 @@ class Product extends Base {
 	public function init() {
 
 		add_action( 'woocommerce_product_options_general_product_data', array( $this, 'add_wholesale_margin_input' ) );
-		add_action( 'woocommerce_process_product_meta'                , array( $this, 'save_wholesale_margin' ) );
+		add_action( 'woocommerce_product_options_general_product_data', array( $this, 'add_virtual_weight_input' ), 20 );
+		add_action( 'woocommerce_process_product_meta'                , array( $this, 'save_custom_meta' ) );
 		add_action( 'woocommerce_update_product'                      , array( $this, 'maybe_modify_visibility' ) );
 		add_action( 'woocommerce_new_product'                         , array( $this, 'maybe_modify_visibility' ) );
 	}
@@ -35,10 +36,27 @@ class Product extends Base {
 		) );
 	}
 
-	public function save_wholesale_margin( $post_id ) {
-		$product = wc_get_product( $post_id );
+	/**
+	 * Adds wholesale margin input to products.
+	 *
+	 * @return [type] [description]
+	 */
+	public function add_virtual_weight_input() {
+		global $product_object;
+
+		woocommerce_wp_text_input( array(
+			'id'          => '_zwoowh_virtual_weight',
+			'value'       => $product_object->get_meta( 'virtual_product_weight', true, 'edit' ),
+			'label'       => __( 'Shipping Weight for Virtual Product', 'zwoowh' ),
+			'description' => '<br />Enter a weight here for virtual products that require a weight when mailed internationally.',
+		) );
+	}
+
+	public function save_custom_meta( $product_id ) {
+		$product = wc_get_product( $product_id );
 
 		$product->update_meta_data( 'wholesale_margin', floatval( $_POST['_zwoowh_wholesale_margin'] ) );
+		$product->update_meta_data( 'virtual_product_weight', floatval( $_POST['_zwoowh_virtual_weight'] ) );
 		$product->save_meta_data();
 	}
 
