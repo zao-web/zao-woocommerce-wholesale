@@ -200,7 +200,7 @@ class Quantity_Management extends Base {
 	public static function get_order_item_product_id( $order_item_product ) {
 		$product_id = is_callable( array( $order_item_product, 'get_variation_id' ) ) ? $order_item_product->get_variation_id() : 0;
 
-		if ( ! $product_id ) {
+		if ( ! $product_id && is_callable( $order_item_product, 'get_product_id' ) ) {
 			$product_id = absint( $order_item_product->get_product_id( 'edit' ) );
 		}
 

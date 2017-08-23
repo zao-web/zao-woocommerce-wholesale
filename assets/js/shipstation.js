@@ -15,40 +15,46 @@ window.ZWOOWH = window.ZWOOWH || {};
 	var ship = app.shipStation;
 
 	ship.cache = function() {
-		app.$.get_rates_button = app.$get( 'get_shipstation_rates' );
-		app.$.shipSpinner      = $( '.shipstation-spinner' );
 		ship.order_id          = $( '#post_ID' ).val();
 	};
 
 	ship.init = function() {
 		ship.cache();
 
-		app.$.get_rates_button.on( 'click', ship.getRates );
+		app.$.body.on( 'click', '#get_shipstation_rates', ship.getRates );
 	};
 
 	ship.setRates = function( evt ) {
-		app.$.shipSpinner.addClass( 'is-active' );
 
-		var $this = $( this );
+		var $this = $( '#shipstation-rates' ).find( ':selected' );
 		var price = $this.data( 'price' );
 		var value = $this.val();
+		ship.block();
+		$.post( window.ajaxurl, {
+			action : 'set_shipstation_rates',
+			order_id : ship.order_id,
+			price : price,
+			value : value,
+			method : $this.text(),
+		}, function( response ) {
 
-		console.log( evt );
-		console.log( price );
-		console.log( value );
+			$( '#shipstation-rates' ).fadeOut();
+			ship.reload_items();
+
+		}, 'json' );
+
 	};
 
 	ship.getRates = function( evt ) {
-		app.$.shipSpinner.addClass( 'is-active' );
 
-		if ( $( '#shipstation-rates' ).length ) {
-			$( '#shipstation-rates' ).remove();
-		}
+		$( '.shipstation-spinner' ).addClass( 'is-active' );
 
 		$.post( window.ajaxurl, { action : 'get_shipstation_rates', order_id : ship.order_id }, function( response ) {
-			console.log( response );
 
-			var $select = $( '<select id="shipstation-rates" />' ).insertBefore( app.$.get_rates_button );
+			$( '#shipstation-rates' ).remove();
+
+			var $select = $( '<select id="shipstation-rates" />' ).insertBefore( $( '#get_shipstation_rates' ) );
+
 			$select.append( '<option value="">' + app.l10n.selectShipping + '</option>' );
 
 			$.each( response.data, function( i, v ) {
@@ -57,11 +63,45 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 			var $select2 = $select.select2();
 
-			app.$.body.on( 'select2:select', $select2, ship.setRates );
+			app.$.body.one( 'change', $select2, ship.setRates );
 
-			app.$.shipSpinner.removeClass( 'is-active' );
+			$( '.shipstation-spinner' ).removeClass( 'is-active' );
 
 		}, 'json' );
+	};
+
+	ship.block = function() {
+		$( '#woocommerce-order-items' ).block({
+			message: null,
+			overlayCSS: {
+				background: '#fff',
+				opacity: 0.6
+			}
+		});
+	};
+
+	ship.unblock = function() {
+		$( '#woocommerce-order-items' ).unblock();
+	};
+
+	ship.reload_items = function() {
+
+		ship.block();
+
+		$.ajax({
+			url:  window.ajaxurl,
+			data: {
+				order_id: window.woocommerce_admin_meta_boxes.post_id,
+				action:   'woocommerce_load_order_items',
+				security: window.woocommerce_admin_meta_boxes.order_item_nonce
+			},
+			type: 'POST',
+			success: function( response ) {
+				$( '#woocommerce-order-items' ).find( '.inside' ).empty();
+				$( '#woocommerce-order-items' ).find( '.inside' ).append( response );
+				ship.unblock();
+			}
+		});
 	};
 
 	$( ship.init );

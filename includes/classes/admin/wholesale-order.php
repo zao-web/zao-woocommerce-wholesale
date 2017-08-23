@@ -32,9 +32,8 @@ class Wholesale_Order extends Base {
 				add_action( 'admin_footer', array( $this, 'add_wholesale_order_button' ) );
 			}
 
-			// TODO: Update shipping method with Shipstation Method
-			// TODO: Also set via set_shipping_total()
-			// add_filter( 'woocommerce_order_shipping_method' )
+			add_filter( 'woocommerce_order_shipping_method', array( $this, 'maybe_filter_shipping_method' ), 10, 2 );
+			add_action( 'wp_ajax_set_shipstation_rates'    , array( $this, 'set_shipstation_rates' ) );
 
 			add_filter( 'woocommerce_get_price_excluding_tax', array( $this, 'filter_wholesale_pricing' ), 10, 3 );
 			add_action( 'woocommerce_process_shop_order_meta', array( $this, 'save_wholesale_order_meta' ) );
@@ -50,6 +49,49 @@ class Wholesale_Order extends Base {
 		} else {
 			add_action( 'admin_head', array( $this, 'maybe_add_wholesale_order_button' ), 9999 );
 		}
+	}
+
+	public function maybe_filter_shipping_method( $methods, $order ) {
+
+		$ss_method = $order->get_meta( 'shipstation_method' );
+
+		if ( empty( $ss_method ) ) {
+			return $methods;
+		}
+
+		return $ss_method;
+	}
+
+	public function set_shipstation_rates() {
+
+		if ( ! isset( $_POST['order_id'] ) ) {
+			wp_send_json_error();
+		}
+
+		$order = wc_get_order( $_POST['order_id'] );
+
+		$method_bits = explode( '-', $_POST['method'] );
+
+		array_pop( $method_bits );
+
+		$method    = sanitize_text_field( implode( '-', $method_bits ) );
+		$method_id = sanitize_text_field( $_POST['value'] );
+
+		// Set Shipping total
+		$shipping_item = new \WC_Order_Item_Shipping();
+
+		$shipping_item->set_name( $method );
+		$shipping_item->set_method_id( $method_id );
+		$shipping_item->set_total( floatval( $_POST['price'] ) );
+
+		$order->add_item( $shipping_item );
+
+		$order->update_meta_data( 'shipstation_method', $method );
+
+		$order->save_meta_data();
+		$order->calculate_totals();
+
+		wp_send_json_success( $_POST );
 	}
 
 	public function add_shipstation_rates_button( $order ) {
