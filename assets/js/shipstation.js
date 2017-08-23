@@ -33,6 +33,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 		var price = $this.data( 'price' );
 		var value = $this.val();
 
+		console.log( evt );
 		console.log( price );
 		console.log( value );
 	};
@@ -54,8 +55,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 				$select.append( '<option data-price="' + v.shipmentCost.toFixed(2) + '" value="' + v.serviceCode + '">' + v.serviceName + ' - $' + v.shipmentCost.toFixed(2) + '</option>' );
 			} );
 
-			var select2 = $select.select2();
-			app.$.body.on( 'select2:select', select2, app.setRates );
+			var $select2 = $select.select2();
+
+			app.$.body.on( 'select2:select', $select2, ship.setRates );
 
 			app.$.shipSpinner.removeClass( 'is-active' );
 
