@@ -55,7 +55,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			} );
 
 			var select2 = $select.select2();
-			select2.on( 'select2:select', app.setRates );
+			app.$.body.on( 'select2:select', select2, app.setRates );
 
 			app.$.shipSpinner.removeClass( 'is-active' );
 
