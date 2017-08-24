@@ -35,7 +35,9 @@ class Wholesale_Order extends Base {
 			add_filter( 'woocommerce_order_shipping_method', array( $this, 'maybe_filter_shipping_method' ), 10, 2 );
 			add_action( 'wp_ajax_set_shipstation_rates'    , array( $this, 'set_shipstation_rates' ) );
 
-			add_filter( 'woocommerce_get_price_excluding_tax', array( $this, 'filter_wholesale_pricing' ), 10, 3 );
+			add_filter( 'woocommerce_get_price_excluding_tax', array( $this, 'filter_wholesale_pricing_when_adding_order_item' ), 10, 3 );
+			add_filter( 'woocommerce_product_get_price', array( $this, 'maybe_filter_wholesale_pricing' ), 10, 2 );
+			add_filter( 'woocommerce_product_variation_get_price', array( $this, 'maybe_filter_wholesale_pricing' ), 10, 2 );
 			add_action( 'woocommerce_process_shop_order_meta', array( $this, 'save_wholesale_order_meta' ) );
 			add_filter( 'admin_body_class'     , array( $this, 'filter_admin_body_class' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
@@ -402,7 +404,7 @@ class Wholesale_Order extends Base {
 	 * @param  [type] $product  [description]
 	 * @return [type]           [description]
 	 */
-	public function filter_wholesale_pricing( $price, $quantity, $product ) {
+	public function filter_wholesale_pricing_when_adding_order_item( $price, $quantity, $product ) {
 		if ( ! is_admin() || ! current_user_can( 'publish_shop_orders' ) ) {
 			return $price;
 		}
@@ -411,19 +413,55 @@ class Wholesale_Order extends Base {
 			return $price;
 		}
 
+		return $this->modify_wholesale_price( $price, $product );
+	}
+
+	/**
+	 * Filters product price in admin when adding items to the cart.
+	 *
+	 * @param  [type] $price    [description]
+	 * @param  [type] $product  [description]
+	 * @return [type]           [description]
+	 */
+	public function maybe_filter_wholesale_pricing( $price, $product ) {
+		if ( ! is_admin() || ! current_user_can( 'publish_shop_orders' ) ) {
+			return $price;
+		}
+
+		return $this->modify_wholesale_price( $price, $product );
+	}
+
+	/**
+	 * Filters product price in admin when adding items to the cart.
+	 *
+	 * @param  [type] $price    [description]
+	 * @param  [type] $product  [description]
+	 * @return [type]           [description]
+	 */
+	public function modify_wholesale_price( $price, $product ) {
+		static $product_prices = array();
+
 		// Margins are currently set on parent product, not per-variation
 		if ( 'variation' === $product->get_type() ) {
-			$_product = wc_get_product( $product->get_parent_id() );
-			$margin   = $_product->get_meta( 'wholesale_margin' );
-		} else {
+			$product = wc_get_product( $product->get_parent_id() );
+		}
+
+		$product_id = $product->get_id();
+
+		// If margin, and we have not already applied margin,
+		if ( ! isset( $product_prices[ $product_id ] ) ) {
 			$margin = $product->get_meta( 'wholesale_margin' );
+
+			if ( $margin ) {
+				// Let's apply the wholesale margin.
+				$price = round( $price / $margin, 2 );
+			}
+
+			// And flag, because we never want to apply double-margin.
+			$product_prices[ $product_id ] = $price;
 		}
 
-		if ( $margin ) {
-			$price = round( $price / $margin, 2 );
-		}
-
-		return $price;
+		return $product_prices[ $product_id ];
 	}
 
 	public function maybe_add_wholesale_order_button() {
