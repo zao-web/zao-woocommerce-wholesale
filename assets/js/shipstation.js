@@ -15,7 +15,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 	var ship = app.shipStation;
 
 	ship.cache = function() {
-		ship.order_id          = $( '#post_ID' ).val();
+		app.$.orderItems  = app.$get( 'woocommerce-order-items' );
+		app.$.shipSpinner = $( '.shipstation-spinner' );
+		ship.order_id     = app.$get( 'post_ID' ).val();
 	};
 
 	ship.init = function() {
@@ -26,7 +28,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 	ship.setRates = function( evt ) {
 
-		var $this = $( '#shipstation-rates' ).find( ':selected' );
+		var $this = app.$get( 'shipstation-rates' ).find( ':selected' );
 		var price = $this.data( 'price' );
 		var value = $this.val();
 		ship.block();
@@ -38,7 +40,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			method : $this.text(),
 		}, function( response ) {
 
-			$( '#shipstation-rates' ).fadeOut();
+			app.$get( 'shipstation-rates' ).fadeOut();
 			ship.reload_items();
 
 		}, 'json' );
@@ -47,13 +49,21 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 	ship.getRates = function( evt ) {
 
-		$( '.shipstation-spinner' ).addClass( 'is-active' );
+		ship.spinner();
 
 		$.post( window.ajaxurl, { action : 'get_shipstation_rates', order_id : ship.order_id }, function( response ) {
 
-			$( '#shipstation-rates' ).remove();
+			app.$get( 'shipstation-rates' ).remove();
 
-			var $select = $( '<select id="shipstation-rates" />' ).insertBefore( $( '#get_shipstation_rates' ) );
+			if ( ! response.success ) {
+				if ( response.data && response.data.msg ) {
+					window.alert( response.data.msg );
+				}
+
+				return ship.hideSpinner();
+			}
+
+			var $select = $( '<select id="shipstation-rates" />' ).insertBefore( app.$get( 'get_shipstation_rates' ) );
 
 			$select.append( '<option value="">' + app.l10n.selectShipping + '</option>' );
 
@@ -65,13 +75,13 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 			app.$.body.one( 'change', $select2, ship.setRates );
 
-			$( '.shipstation-spinner' ).removeClass( 'is-active' );
+			ship.hideSpinner();
 
 		}, 'json' );
 	};
 
 	ship.block = function() {
-		$( '#woocommerce-order-items' ).block({
+		app.$.orderItems.block({
 			message: null,
 			overlayCSS: {
 				background: '#fff',
@@ -81,7 +91,15 @@ window.ZWOOWH = window.ZWOOWH || {};
 	};
 
 	ship.unblock = function() {
-		$( '#woocommerce-order-items' ).unblock();
+		app.$.orderItems.unblock();
+	};
+
+	ship.spinner = function() {
+		app.$.shipSpinner.addClass( 'is-active' );
+	};
+
+	ship.hideSpinner = function() {
+		app.$.shipSpinner.removeClass( 'is-active' );
 	};
 
 	ship.reload_items = function() {
@@ -97,8 +115,8 @@ window.ZWOOWH = window.ZWOOWH || {};
 			},
 			type: 'POST',
 			success: function( response ) {
-				$( '#woocommerce-order-items' ).find( '.inside' ).empty();
-				$( '#woocommerce-order-items' ).find( '.inside' ).append( response );
+				app.$.orderItems.find( '.inside' ).empty();
+				app.$.orderItems.find( '.inside' ).append( response );
 				ship.unblock();
 			}
 		});
