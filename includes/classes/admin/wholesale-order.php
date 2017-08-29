@@ -2,12 +2,12 @@
 
 namespace Zao\ZaoWooCommerce_Wholesale\Admin;
 use Zao\ZaoWooCommerce_Wholesale\User, Zao\ZaoWooCommerce_Wholesale\Base;
-use WC_Order;
 
 /**
  * The order admin interface for wholesale orders.
  */
 class Wholesale_Order extends Base {
+	protected static $wholesale_custom_field = 'is_wholesale_order';
 	protected static $is_wholesale = null;
 	protected static $is_edit_mode = null;
 	protected $products            = array();
@@ -16,6 +16,7 @@ class Wholesale_Order extends Base {
 	public function __construct() {
 		if ( self::is_wholesale_context() ) {
 			$this->quantity_management = new Quantity_Management;
+			$this->shipstation = new Shipstation;
 		}
 	}
 
@@ -23,6 +24,7 @@ class Wholesale_Order extends Base {
 		if ( self::is_wholesale_context() ) {
 
 			$this->quantity_management->init();
+			$this->shipstation->init();
 
 			$order_type_object = get_post_type_object( sanitize_text_field( 'shop_order' ) );
 			$order_type_object->labels->add_new_item = __( 'Add new wholesale order', 'zwoowh' );
@@ -32,9 +34,6 @@ class Wholesale_Order extends Base {
 				add_action( 'admin_footer', array( $this, 'add_wholesale_order_button' ) );
 			}
 
-			add_filter( 'woocommerce_order_shipping_method', array( $this, 'maybe_filter_shipping_method' ), 10, 2 );
-			add_action( 'wp_ajax_set_shipstation_rates'    , array( $this, 'set_shipstation_rates' ) );
-
 			add_filter( 'woocommerce_get_price_excluding_tax', array( $this, 'filter_wholesale_pricing_when_adding_order_item' ), 10, 3 );
 			add_filter( 'woocommerce_product_get_price', array( $this, 'maybe_filter_wholesale_pricing' ), 10, 2 );
 			add_filter( 'woocommerce_product_variation_get_price', array( $this, 'maybe_filter_wholesale_pricing' ), 10, 2 );
@@ -43,192 +42,11 @@ class Wholesale_Order extends Base {
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
 			add_action( 'admin_footer'         , array( $this, 'add_app' ) );
 			add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'add_help' ) );
-			add_action( 'woocommerce_order_item_add_action_buttons', array( $this, 'add_shipstation_rates_button' ) );
 
-			add_filter( 'woocommerce_shipstation_export_custom_field_2', array( $this, 'add_wholesale_custom_field_to_shipstation_order' ) );
 			add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
-			add_action( 'wp_ajax_get_shipstation_rates', array( $this, 'ajax_shipstation_rates' ) );
 		} else {
 			add_action( 'admin_head', array( $this, 'maybe_add_wholesale_order_button' ), 9999 );
 		}
-	}
-
-	public function maybe_filter_shipping_method( $methods, $order ) {
-
-		$ss_method = $order->get_meta( 'shipstation_method' );
-
-		if ( empty( $ss_method ) ) {
-			return $methods;
-		}
-
-		return $ss_method;
-	}
-
-	public function set_shipstation_rates() {
-
-		if ( ! isset( $_POST['order_id'] ) ) {
-			wp_send_json_error();
-		}
-
-		$order = wc_get_order( $_POST['order_id'] );
-
-		$method_bits = explode( '-', $_POST['method'] );
-
-		array_pop( $method_bits );
-
-		$method    = sanitize_text_field( implode( '-', $method_bits ) );
-		$method_id = sanitize_text_field( $_POST['value'] );
-
-		// Set Shipping total
-		$shipping_item = new \WC_Order_Item_Shipping();
-
-		$shipping_item->set_name( $method );
-		$shipping_item->set_method_id( $method_id );
-		$shipping_item->set_total( floatval( $_POST['price'] ) );
-
-		$order->add_item( $shipping_item );
-
-		$order->update_meta_data( 'shipstation_method', $method );
-
-		$order->save_meta_data();
-		$order->calculate_totals();
-
-		wp_send_json_success( $_POST );
-	}
-
-	public function add_shipstation_rates_button( $order ) {
-	 if ( $this->can_be_shipped( $order ) ) : ?>
-		<span class="shipstation-spinner spinner" style="float: none; vertical-align: top;"></span><button type="button" id="get_shipstation_rates" class="button button-primary get-rates" style="margin-left:1em"><?php _e( 'Get Shipstation Rates', 'zwoowh' ); ?></button>
-	<?php endif;
-	}
-
-	public function add_wholesale_custom_field_to_shipstation_order() {
-		return 'is_wholesale_order';
-	}
-
-	public function ajax_shipstation_rates() {
-
-		if ( ! isset( $_POST['order_id'] ) ) {
-			wp_send_json_error();
-		}
-
-		$order = wc_get_order( $_POST['order_id'] );
-
-		$args = array(
-			'order_id'       => $_POST['order_id'],
-			'fromPostalCode' => apply_filters( 'zwoowh_base_shipping_zip_code', '' ), // TODO: Expose as setting?
-			'toCountry'      => $order->get_shipping_country(),
-			'toPostalCode'   => $order->get_shipping_postcode(),
-			'weight'         => array( 'value' => $this->get_order_weight( $order ), 'units' => 'ounces' ),
-		);
-
-		$rates = $this->get_rates( $args );
-
-		if ( ! empty( $rates ) ) {
-			wp_send_json_success( $rates );
-		} else {
-			wp_send_json_error( $rates );
-		}
-	}
-
-	/**
-	 * Gets order weight.
-	 *
-	 * @todo abstract customization to plugin.
-	 *
-	 * @param  WC_Order $order [description]
-	 * @return [type]          [description]
-	 */
-	public function get_order_weight( WC_Order $order ) {
-		$weight = 0;
-
-		$shipping_country = $order->get_shipping_country();
-
-		$is_international = ! empty( $shipping_country ) && 'US' !== $shipping_country;
-
-		foreach ( $order->get_items() as $item ) {
-
-			if ( $item['product_id'] > 0 ) {
-
-				$_product         = $order->get_product_from_item( $item );
-				$product_has_virtual_weight = $_product->get_meta( 'virtual_product_weight' );
-
-				if ( ! $_product->is_virtual() ) {
-
-					$weight += $_product->get_weight() * $item['qty'];
-
-				} else if ( $is_international && $product_has_virtual_weight  ) {
-
-					$weight += $product_has_virtual_weight * $item['qty'];
-
-				}
-
-			}
-
-		}
-
-		return apply_filters( 'zwoowh_get_order_weight', $weight, $order );
-	}
-
-	public function can_be_shipped( WC_Order $order ) {
-		$needs_shipping = false;
-
-		foreach ( $order->get_items() as $item ) {
-
-			if ( $item['product_id'] > 0 ) {
-
-				$_product = $order->get_product_from_item( $item );
-
-				if ( $_product->needs_shipping() ) {
-
-					$needs_shipping = true;
-					break;
-				}
-			}
-		}
-
-		return apply_filters( 'zwoowh_order_can_be_shipped', $needs_shipping, $order );
-	}
-
-	/**
-	 * Gets Shipping Rates from Shipstation for a given order.
-	 *
-	 * @return [type] [description]
-	 */
-	public function get_rates( Array $args = array() ) {
-
-		$order = $args['order_id'];
-
-		$body  = apply_filters( 'zwoowh_get_wholesale_rates_args', wp_parse_args( $args, array(
-			'carrierCode'    => 'stamps_com', // Required
-			'serviceCode'    => '',
-			'packageCode'    => '',
-			'fromPostalCode' => '', // Required
-			'toState'        => '', // Required if UPS
-			'toCountry'      => '', // Required
-			'toPostalCode'   => '', // Required
-			'toCity'         => '',
-			'weight'         => '', // Required, as a Weight object
-		), $order ) );
-
-		$args = array(
-			'headers' => array(
-				'Authorization' => 'Basic ' . base64_encode( ZWOOWH_SHIPSTATION_API_KEY . ':' . ZWOOWH_SHIPSTATION_API_SECRET ),
-			),
-			'body'    => $body
-		);
-
-		$response = wp_remote_post( 'https://ssapi.shipstation.com/shipments/getrates', $args );
-
-		$status   = wp_remote_retrieve_response_code( $response );
-
-		if ( 200 === $status ) {
-			$rates = json_decode( wp_remote_retrieve_body( $response ) );
-		} else {
-			$rates = array();
-		}
-
-		return apply_filters( 'zwoowh_get_rates', $rates, $args, $response );
 	}
 
 	public function filter_admin_body_class( $body_class = '' ) {
@@ -240,13 +58,14 @@ class Wholesale_Order extends Base {
 		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 		wp_enqueue_style( 'zao-woocommerce-wholesale', ZWOOWH_URL . "assets/css/zao-woocommerce-wholesale{$min}.css", array(), ZWOOWH_VERSION );
 		wp_register_script( 'zao-woocommerce-wholesale', ZWOOWH_URL . "assets/js/zao-woocommerce-wholesale{$min}.js", array(), ZWOOWH_VERSION, true );
-		wp_register_script( 'zao-woocommerce-wholesale-shipstation', ZWOOWH_URL . "assets/js/shipstation{$min}.js", array(), ZWOOWH_VERSION, true );
+		$this->shipstation->register_script();
 		add_action( 'admin_footer', array( $this, 'enqueue_and_localize_data' ), 12 );
 	}
 
 	public function enqueue_and_localize_data() {
+		$this->shipstation->enqueue_script();
+
 		wp_enqueue_script( 'zao-woocommerce-wholesale' );
-		wp_enqueue_script( 'zao-woocommerce-wholesale-shipstation' );
 		$data = apply_filters( 'zao_woocommerce_wholesale_l10n', array(
 			'rest_url'          => rest_url(),
 			'placeholderImgSrc' => wc_placeholder_img_src(),
@@ -494,7 +313,7 @@ class Wholesale_Order extends Base {
 		$order = wc_get_order( $post_id );
 
 		if ( $order ) {
-			$order->update_meta_data( 'is_wholesale_order', true );
+			$order->update_meta_data( self::$wholesale_custom_field, true );
 			$order->save_meta_data();
 		}
 	}
@@ -539,7 +358,7 @@ class Wholesale_Order extends Base {
 			&& isset( $_GET['post'] )
 			&& 'shop_order' === get_post_type( $_GET['post'] )
 			&& ( $order = get_post( absint( $_GET['post'] ) ) )
-			&& $order->is_wholesale_order
+			&& $order->{self::$wholesale_custom_field}
 		);
 
 		self::$is_wholesale = self::$is_edit_mode || (
@@ -552,4 +371,7 @@ class Wholesale_Order extends Base {
 		);
 	}
 
+	public static function get_wholesale_custom_field() {
+		return self::$wholesale_custom_field;
+	}
 }
