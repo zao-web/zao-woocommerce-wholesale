@@ -4,9 +4,9 @@ namespace Zao\ZaoWooCommerce_Wholesale\Admin;
 use Zao\ZaoWooCommerce_Wholesale\Base, WC_Order;
 
 /**
- * Adding Shipstation interface (if key/secret is defined)
+ * Adding ShipStation interface (if key/secret is defined)
  */
-class Shipstation extends Base {
+class ShipStation extends Base {
 	const GET_RATES_URL = 'https://ssapi.shipstation.com/shipments/getrates';
 
 	public function __construct() {}
@@ -34,7 +34,7 @@ class Shipstation extends Base {
 
 	public static function add_shipstation_rates_button( $order ) {
 		if ( self::can_be_shipped( $order ) ) : ?>
-		<span class="shipstation-spinner spinner" style="float: none; vertical-align: top;"></span><button type="button" id="get_shipstation_rates" class="button button-primary get-rates" style="margin-left:1em"><?php _e( 'Get Shipstation Rates', 'zwoowh' ); ?></button>
+		<span class="shipstation-spinner spinner" style="float: none; vertical-align: top;"></span><button type="button" id="get_shipstation_rates" class="button button-primary get-rates" style="margin-left:1em"><?php _e( 'Get ShipStation Rates', 'zwoowh' ); ?></button>
 		<?php endif;
 	}
 
@@ -73,7 +73,7 @@ class Shipstation extends Base {
 	}
 
 	/**
-	 * Gets Shipping Rates from Shipstation for a given order.
+	 * Gets Shipping Rates from ShipStation for a given order.
 	 *
 	 * @return [type] [description]
 	 */

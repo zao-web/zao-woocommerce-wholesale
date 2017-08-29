@@ -16,7 +16,7 @@ class Wholesale_Order extends Base {
 	public function __construct() {
 		if ( self::is_wholesale_context() ) {
 			$this->quantity_management = new Quantity_Management;
-			$this->shipstation = new Shipstation;
+			$this->shipstation = new ShipStation;
 		}
 	}
 
