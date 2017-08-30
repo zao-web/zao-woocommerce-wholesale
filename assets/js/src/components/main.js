@@ -31,6 +31,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.$.select    = $get( 'customer_user' );
 		app.$.addItems  = $( '.button.add-line-item' );
 		app.$.lineItems = $get( 'order_line_items' );
+		app.$.lvls      = $( '.all-stock-levels-wrap' );
 	};
 
 	app.triggerStep = () => app[ 'step' + app.whichStep() ]();
@@ -382,6 +383,66 @@ window.ZWOOWH = window.ZWOOWH || {};
 		}
 	};
 
+	app.reduceAllStock = function( evt ) {
+		evt.preventDefault();
+
+		if ( ! window.confirm( app.l10n.confirmReduceStock ) ) {
+			return;
+		}
+
+		var url = window.ajaxurl + '?action=zwoowh_reduce_all_stock_levels&order_id=' + $get( 'post_ID' ).val();
+
+		app.lvlsAjax( url );
+	};
+
+	app.restoreAllStock = function( evt ) {
+		evt.preventDefault();
+
+		if ( ! window.confirm( app.l10n.confirmRestoreStock ) ) {
+			return;
+		}
+
+		var url = window.ajaxurl + '?action=zwoowh_restore_all_stock_levels&order_id=' + $get( 'post_ID' ).val();
+
+		app.lvlsAjax( url );
+	};
+
+	app.lvlsAjax = function( url ) {
+		app.$.lvls.find( '.spinner' ).addClass( 'is-active' );
+
+		var params = {
+			type: 'GET',
+			url: url,
+			success: function( response ) {
+				if ( response.success ) {
+					window.location.href = window.location.href;
+				}
+				app.$.lvls.find( '.spinner' ).removeClass( 'is-active' );
+			},
+			error: function( jqXHR, textStatus, errorThrown ) {
+				app.$.lvls.find( '.spinner' ).removeClass( 'is-active' );
+
+				var msg = app.l10n.msgReceived;
+				var err = jqXHR.responseJSON;
+
+				if ( err && err.code && err.message ) {
+					msg = jqXHR.status + ' ' + err.code + ' - ' + err.message;
+				}
+
+				if ( errorThrown ) {
+					msg += ' ' + app.l10n.msgReceived;
+					msg += "\n\n" + errorThrown;
+					if ( textStatus ) {
+						msg += ' (' + textStatus + ')';
+					}
+				}
+				console.error( msg );
+			},
+		};
+
+		$.ajax( params );
+	};
+
 	app.init = function() {
 		console.warn('ZWOOWH init');
 		app.cache();
@@ -399,6 +460,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.initVue();
 
 		app.$.select.on( 'change', app.toggleOrderBoxes );
+		app.$.lvls.show();
 
 		// disable mousewheel on a input number field when in focus
 		// (to prevent Chromium browsers change the value when scrolling)
@@ -408,7 +470,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 			} )
 			.on( 'blur', '#quantities-form input[type=number]', function( evt ) {
 			  $( this ).off( 'mousewheel.disableScroll' );
-			} );
+			} )
+			.on( 'click', '.reduce-all-stock-levels-button', app.reduceAllStock )
+			.on( 'click', '.restore-all-stock-levels-button', app.restoreAllStock );
 
 		if ( app.replaceDropdown ) {
 			app.$.select.select2();

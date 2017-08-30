@@ -8,14 +8,17 @@ use Zao\ZaoWooCommerce_Wholesale\User, Zao\ZaoWooCommerce_Wholesale\Base;
  */
 class Wholesale_Order extends Base {
 	protected static $wholesale_custom_field = 'is_wholesale_order';
-	protected static $is_wholesale = null;
-	protected static $is_edit_mode = null;
-	protected $products            = array();
-	public $quantity_management    = null;
+	protected static $is_wholesale           = null;
+	protected static $is_edit_mode           = null;
+	protected $products                      = array();
+	protected $quantity_management           = null;
+	protected $shipstation                   = null;
+	protected $inventory_management          = null;
 
 	public function __construct() {
 		if ( self::is_wholesale_context() ) {
 			$this->quantity_management = new Quantity_Management;
+			$this->inventory_management = new Inventory_Management;
 			$this->shipstation = new ShipStation;
 		}
 	}
@@ -24,6 +27,7 @@ class Wholesale_Order extends Base {
 		if ( self::is_wholesale_context() ) {
 
 			$this->quantity_management->init();
+			$this->inventory_management->init();
 			$this->shipstation->init();
 
 			$order_type_object = get_post_type_object( sanitize_text_field( 'shop_order' ) );
