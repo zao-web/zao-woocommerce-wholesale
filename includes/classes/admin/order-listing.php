@@ -11,6 +11,9 @@ class Order_Listing extends Base {
 	public function init() {
 		add_action( 'admin_print_styles', array( $this, 'style_wholesale_tag' ), 999 );
 		add_action( 'manage_shop_order_posts_custom_column', array( $this, 'maybe_add_wholesale_tag' ), -5 );
+		if ( isset( $_GET['wholesale_only'] ) ) {
+			add_action( 'pre_get_posts', array( $this, 'maybe_filter_to_wholesale_only' ) );
+		}
 	}
 
 	public function style_wholesale_tag() {
@@ -57,9 +60,29 @@ class Order_Listing extends Base {
 			return;
 		}
 
-		$wholesale_tag = '<small class="wholesale-tag">' . __( 'Wholesale', 'zwoowh' ) . '</small>';
+		$filter_url = add_query_arg( 'wholesale_only', 1 );
+		$wholesale_tag = '<a class="wholesale-tag" href="' . esc_url( $filter_url )  . '"><small>' . __( 'Wholesale', 'zwoowh' ) . '</small></a>';
 
 		echo str_replace( '</strong></a>', '</strong></a>' . $wholesale_tag, ob_get_clean() );
+	}
+
+	public function maybe_filter_to_wholesale_only( $query ) {
+		if ( ! $query->is_main_query() || 'shop_order' !== $query->get( 'post_type' ) ) {
+			return;
+		}
+
+		$meta_query = $query->get( 'meta_query' );
+
+		if ( empty( $meta_query ) ) {
+			$meta_query = array();
+		}
+
+		$meta_query[] = array(
+			'key' => Wholesale_Order::get_wholesale_custom_field(),
+			'compare' => 'EXISTS',
+		);
+
+		$query->set( 'meta_query', $meta_query );
 	}
 
 }
