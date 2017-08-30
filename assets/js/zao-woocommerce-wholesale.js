@@ -1,5 +1,5 @@
 /**
- * Zao WooCommerce Wholesale - v0.1.0 - 2017-08-29
+ * Zao WooCommerce Wholesale - v0.1.0 - 2017-08-30
  * https://zao.is
  *
  * Copyright (c) 2017 Zao
@@ -211,9 +211,7 @@ exports.default = {
 				var product = this.products.find(function (product) {
 					return id === product.id;
 				});
-				if (product.manage_stock && qty > product.stock_quantity) {
-					qty = product.stock_quantity;
-				}
+
 
 				product.qty = qty;
 			}
