@@ -20,5 +20,6 @@ View the [Plugin Wiki](https://github.com/zao-web/zao-woocommerce-wholesale/wiki
 
 ### Manual Installation
 
-1. Upload the entire `/zao-woocommerce-wholesale` directory to the `/wp-content/plugins/` directory.
+1. Upload the entire `/zao-woocommerce-wholesale` directory or clone this repository to the `/wp-content/plugins/` directory.
+2. Run `composer install` inside the `/wp-content/plugins/zao-woocommerce-wholesale` directory.
 2. Activate Zao WooCommerce Wholesale through the 'Plugins' menu in WordPress.
