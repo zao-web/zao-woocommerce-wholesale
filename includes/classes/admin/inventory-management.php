@@ -15,16 +15,25 @@ class Inventory_Management extends Base {
 		add_action( 'wp_ajax_zwoowh_reduce_all_stock_levels', array( $this, 'ajax_reduce_all_stock_levels' ) );
 		add_action( 'wp_ajax_zwoowh_restore_all_stock_levels', array( $this, 'ajax_restore_all_stock_levels' ) );
 		add_filter( 'zao_woocommerce_wholesale_l10n', array( $this, 'add_l10n_items' ) );
+
+		// For wholesale orders, do not reduce stock levels for items
+		// within an order when a payment is complete.
+		// This requires clicking the button to do so.
+		add_filter( 'woocommerce_payment_complete_reduce_order_stock', array( $this, 'disable_payment_complete_stock_reduction_for_wholesale' ), 10, 2 );
+	}
+
+	public function disable_payment_complete_stock_reduction_for_wholesale( $allowed, $order_id ) {
+		$order = wc_get_order( $order_id );
+
+		if ( $order && $order->get_meta( Wholesale_Order::get_wholesale_custom_field() ) ) {
+			$allowed = false;
+		}
+
+		return $allowed;
 	}
 
 	public function add_inventory_button( $order ) {
-		// $has_been_reduced = $order->get_data_store()->get_stock_reduced( $order );
-		// $order->get_data_store()->set_stock_reduced( $order->get_id(), true );
-
 		$has_been_reduced = $order->get_meta( 'reduced_products_stock' );
-
-		echo '<span class="all-stock-levels-wrap">';
-		echo '<span class="spinner"></span>';
 
 		$class = ! empty( $has_been_reduced )
 			? 'restore-all-stock-levels-button'
@@ -34,8 +43,12 @@ class Inventory_Management extends Base {
 			? __( 'Restore all product stock levels', 'woocommerce' )
 			: __( 'Reduce all product stock levels', 'woocommerce' );
 
-		echo '<button type="button" class="button button-secondary button-link-delete ' . $class . '">' . $text . '</button>';
-		echo '</span>';
+		?>
+		<span class="all-stock-levels-wrap">
+			<span class="spinner"></span>
+			<button type="button" class="button button-secondary button-link-delete <?php echo $class; ?>"><?php echo $text; ?></button>
+		</span>
+		<?php
 	}
 
 	public function ajax_reduce_all_stock_levels() {
