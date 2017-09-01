@@ -136,7 +136,8 @@ class Inventory_Management extends Base {
 
 		foreach ( $products_stock as $product_id => $qty ) {
 			$product = wc_get_product( $product_id );
-			if ( ! $product ) {
+
+			if ( ! $product || ! $product->exists() || ! $product->managing_stock() ) {
 				continue;
 			}
 
