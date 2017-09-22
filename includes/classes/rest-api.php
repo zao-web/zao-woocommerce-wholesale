@@ -7,9 +7,9 @@ class REST_API {
 	protected static $request;
 
 	public function init() {
-		add_action( 'rest_request_before_callbacks', array( $this, 'store_request' ), 10, 3 );
+		add_filter( 'rest_request_before_callbacks', array( $this, 'store_request' ), 10, 3 );
 		add_action( 'pre_get_posts', array( $this, 'maybe_filter_wholesale' ) );
-		add_action( 'rest_request_after_callbacks', array( $this, 'maybe_modify_response' ), 10, 3 );
+		add_filter( 'rest_request_after_callbacks', array( $this, 'maybe_modify_response' ), 10, 3 );
 	}
 
 	public function store_request( $response, $handler, $request ) {
