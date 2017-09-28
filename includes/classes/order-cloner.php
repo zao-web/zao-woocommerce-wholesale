@@ -37,6 +37,8 @@ class Order_Cloner extends Accessible {
 
 			$this->order->update_meta_data( 'original_order', $this->orig_order->get_id() );
 
+			do_action( 'zwoowh_order_cloner_pre_save', $this );
+
 			$this->order->save_meta_data();
 			$this->order->save();
 

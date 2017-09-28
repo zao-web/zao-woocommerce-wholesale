@@ -34,6 +34,8 @@ class Order_Item_Cloner extends Accessible {
 
 				$this->item->set_meta_data( $this->orig_item->get_meta_data() );
 
+				do_action( 'zwoowh_order_item_cloner_pre_save', $this );
+
 				$this->item->save_meta_data();
 				$this->item->save();
 			}

@@ -282,6 +282,8 @@ class Backorders_Management extends Order_Base {
 
 		$backorders = array();
 
+		add_action( 'zwoowh_order_cloner_pre_save', array( __CLASS__, 'set_backorder_status' ) );
+
 		foreach ( $split_orders as $product_id => $to_order ) {
 			$cloner = new Order_Cloner( $orig_order );
 			$order = $cloner->clone();
@@ -313,7 +315,6 @@ class Backorders_Management extends Order_Base {
 				}
 			}
 
-			$order->set_status( 'wholesale-back' );
 			$order->calculate_totals();
 		}
 
@@ -321,6 +322,10 @@ class Backorders_Management extends Order_Base {
 		$orig_order->save_meta_data();
 
 		return $backorders;
+	}
+
+	public static function set_backorder_status( Order_Cloner $cloner ) {
+		$cloner->order->set_status( 'wholesale-back' );
 	}
 
 }
