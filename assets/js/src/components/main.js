@@ -202,7 +202,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 				app.vEvent.$emit( 'productsFetched', page, done );
 			},
 			error: ( jqXHR, textStatus, errorThrown ) => {
-				let err = app.errMessage( jqXHR, textStatus, errorThrown );
+				let err = app.stockErrMessage( jqXHR, textStatus, errorThrown );
 				console.warn( 'error', { jqXHR, textStatus, errorThrown } );
 				window.alert( err );
 			},
@@ -254,7 +254,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 				app.getProductVariations();
 			},
-			error: jqXHR => console.error( app.errMessage( jqXHR ) ),
+			error: jqXHR => console.error( app.stockErrMessage( jqXHR ) ),
 		};
 
 		$.ajax( params );
@@ -316,8 +316,11 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.vEvent.$emit( 'modalClose' );
 	};
 
-	app.errMessage = function( jqXHR, textStatus, errorThrown ) {
-		var msg = app.l10n.somethingWrong;
+	app.stockErrMessage = function( jqXHR, textStatus, errorThrown ) {
+		return app.errMessage( app.l10n.somethingWrong, jqXHR, textStatus, errorThrown );
+	};
+
+	app.errMessage = function( msg, jqXHR, textStatus, errorThrown ) {
 		var err = jqXHR.responseJSON;
 
 		if ( err && err.code && err.message ) {
@@ -396,31 +399,20 @@ window.ZWOOWH = window.ZWOOWH || {};
 		}
 	};
 
-	app.reduceAllStock = function( evt ) {
+	app.doAjaxButton = function( evt ) {
+		var data = $( this ).data();
 		evt.preventDefault();
 
-		if ( ! window.confirm( app.l10n.confirmReduceStock ) ) {
+		if ( ! window.confirm( data.confirmation ) ) {
 			return;
 		}
 
-		var url = window.ajaxurl + '?action=zwoowh_reduce_all_stock_levels&order_id=' + $get( 'post_ID' ).val();
+		var url = window.ajaxurl + '?action='+ data.action +'&order_id=' + $get( 'post_ID' ).val();
 
-		app.lvlsAjax( url );
+		app.ajaxRefresh( url );
 	};
 
-	app.restoreAllStock = function( evt ) {
-		evt.preventDefault();
-
-		if ( ! window.confirm( app.l10n.confirmRestoreStock ) ) {
-			return;
-		}
-
-		var url = window.ajaxurl + '?action=zwoowh_restore_all_stock_levels&order_id=' + $get( 'post_ID' ).val();
-
-		app.lvlsAjax( url );
-	};
-
-	app.lvlsAjax = function( url ) {
+	app.ajaxRefresh = function( url ) {
 		app.block();
 
 		var params = {
@@ -429,26 +421,13 @@ window.ZWOOWH = window.ZWOOWH || {};
 			success: function( response ) {
 				if ( response.success ) {
 					window.location.href = window.location.href;
+				} else {
+					app.unblock();
 				}
-				app.unblock();
 			},
 			error: function( jqXHR, textStatus, errorThrown ) {
 				app.unblock();
-
-				var msg = app.l10n.msgReceived;
-				var err = jqXHR.responseJSON;
-
-				if ( err && err.code && err.message ) {
-					msg = jqXHR.status + ' ' + err.code + ' - ' + err.message;
-				}
-
-				if ( errorThrown ) {
-					msg += ' ' + app.l10n.msgReceived;
-					msg += "\n\n" + errorThrown;
-					if ( textStatus ) {
-						msg += ' (' + textStatus + ')';
-					}
-				}
+				var msg = app.errMessage( app.l10n.msgReceived, jqXHR, textStatus, errorThrown );
 				console.error( msg );
 			},
 		};
@@ -471,7 +450,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 		$get( 'woocommerce-order-items' ).off( 'click', 'button.add-order-item' );
 
 		app.$.select.on( 'change', app.toggleOrderBoxes );
-		app.$.lvls.show();
+		$( '.zwoowh-action-button-wrap' ).show();
 
 		// disable mousewheel on a input number field when in focus
 		// (to prevent Chromium browsers change the value when scrolling)
@@ -482,8 +461,9 @@ window.ZWOOWH = window.ZWOOWH || {};
 			.on( 'blur', '#quantities-form input[type=number]', function( evt ) {
 			  $( this ).off( 'mousewheel.disableScroll' );
 			} )
-			.on( 'click', '.reduce-all-stock-levels-button', app.reduceAllStock )
-			.on( 'click', '.restore-all-stock-levels-button', app.restoreAllStock );
+			.on( 'click', '.reduce-all-stock-levels-button', app.doAjaxButton )
+			.on( 'click', '.restore-all-stock-levels-button', app.doAjaxButton )
+			.on( 'click', '.split-into-backorders-button', app.doAjaxButton );
 
 		if ( app.replaceDropdown ) {
 			app.$.select.select2();

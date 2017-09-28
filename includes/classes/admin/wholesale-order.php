@@ -14,11 +14,13 @@ class Wholesale_Order extends Base {
 	protected $quantity_management           = null;
 	protected $shipstation                   = null;
 	protected $inventory_management          = null;
+	protected $backorders_management          = null;
 
 	public function __construct() {
 		if ( self::is_wholesale_context() ) {
 			$this->quantity_management = new Quantity_Management;
 			$this->inventory_management = new Inventory_Management;
+			$this->backorders_management = new Backorders_Management;
 			$this->shipstation = new ShipStation;
 		}
 	}
@@ -28,6 +30,7 @@ class Wholesale_Order extends Base {
 
 			$this->quantity_management->init();
 			$this->inventory_management->init();
+			$this->backorders_management->init();
 			$this->shipstation->init();
 
 			$order_type_object = get_post_type_object( sanitize_text_field( 'shop_order' ) );

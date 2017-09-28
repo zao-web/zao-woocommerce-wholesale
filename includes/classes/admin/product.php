@@ -19,7 +19,6 @@ class Product extends Base {
 		add_action( 'woocommerce_new_product'                         , array( $this, 'maybe_modify_visibility' ) );
 	}
 
-
 	/**
 	 * Adds wholesale margin input to products.
 	 *
