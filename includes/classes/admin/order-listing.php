@@ -3,7 +3,7 @@
 namespace Zao\ZaoWooCommerce_Wholesale\Admin;
 use Zao\ZaoWooCommerce_Wholesale\Base;
 
-class Order_Listing extends Base {
+class Order_Listing extends Order_Base {
 	protected $is_wholesale = false;
 
 	public function __construct() {}
@@ -47,7 +47,7 @@ class Order_Listing extends Base {
 			$the_order = wc_get_order( $post->ID );
 		}
 
-		$this->is_wholesale = $the_order->get_meta( Wholesale_Order::get_wholesale_custom_field() );
+		$this->is_wholesale = parent::is_wholesale( $the_order );
 
 		if ( $this->is_wholesale ) {
 			ob_start();

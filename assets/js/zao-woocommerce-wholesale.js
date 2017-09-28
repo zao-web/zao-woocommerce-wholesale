@@ -732,7 +732,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			url: url,
 			success: function success(response) {
 				if (response.success) {
-					window.location.href = window.location.href;
+					window.location.href = response.data && response.data.redirect ? response.data.redirect : window.location.href;
 				} else {
 					app.unblock();
 				}

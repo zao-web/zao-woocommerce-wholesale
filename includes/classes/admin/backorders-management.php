@@ -8,14 +8,37 @@ use Zao\ZaoWooCommerce_Wholesale\Order_Item_Cloner;
 /**
  * Handling backorders for wholesale orders.
  */
-class Backorders_Management extends Inventory_Management {
+class Backorders_Management extends Order_Base {
 	protected static $backorders_list = array();
 	public function __construct() {}
 
 	public function init() {
+		add_action( 'all_admin_notices', array( __CLASS__, 'maybe_output_success_notice' ) );
+
+		add_action( current_filter(), array( __CLASS__, 'maybe_change_order_edit_label' ), 22 );
 		add_action( 'add_meta_boxes', array( __CLASS__, 'maybe_register_backorders_metabox' ) );
+		add_action( 'woocommerce_after_order_itemmeta', array( __CLASS__, 'maybe_output_backorder_status' ), 10, 3 );
 		add_action( 'woocommerce_order_item_add_action_buttons', array( __CLASS__, 'add_split_order_button' ) );
 		add_action( 'wp_ajax_zwoowh_split_order_to_backorders', array( __CLASS__, 'ajax_split_order_to_backorders' ) );
+	}
+
+	public static function maybe_output_success_notice() {
+		if ( isset( $_GET['backorders_generated'] ) ) {
+			$backorders = array_map( 'absint', explode( ',', $_GET['backorders_generated'] ) );
+			$backorders = self::format_order_links( $backorders );
+
+			parent::output_notice(
+				sprintf( __( 'The backorders have been successfully generated (%s).', 'zwqoi' ), implode( ', ', $backorders ) ),
+				'backorders_generated'
+			);
+		}
+	}
+
+	public static function maybe_change_order_edit_label() {
+		$order = parent::get_order_being_edited();
+		if ( $order && $order->get_meta( 'original_order' ) ) {
+			parent::modify_order_label( 'edit_item', __( 'Edit wholesale backorder', 'zwoowh' ) );
+		}
 	}
 
 	public static function maybe_register_backorders_metabox( $post_type ) {
@@ -23,19 +46,19 @@ class Backorders_Management extends Inventory_Management {
 			return;
 		}
 
-		$order = isset( $_GET['post'] ) ? wc_get_order( absint( $_GET['post'] ) ) : false;
+		$order = parent::get_order_being_edited();
 		if ( ! $order ) {
 			return;
 		}
 
-		self::generate_backorders_list();
+		self::generate_backorders_list( $order );
 
 		if ( empty( self::$backorders_list ) ) {
 			return;
 		}
 
 		$title = $order->get_meta( 'original_order' )
-			? __( 'Associated Wholesale Order', 'zwoowh' )
+			? __( 'Original Wholesale Order', 'zwoowh' )
 			: __( 'Connected Backorders', 'zwoowh' );
 
 		add_meta_box(
@@ -52,10 +75,9 @@ class Backorders_Management extends Inventory_Management {
 		$backorders     = $order->get_meta( 'split_backorders' );
 
 		if ( $original_order ) {
-			self::$backorders_list[] = array(
-				'url'   => get_edit_post_link( $original_order ),
-				'title' => sprintf( '#%d', $original_order ),
-			);
+
+			self::$backorders_list[] = $original_order;
+
 		} elseif ( ! empty( $backorders ) ) {
 			$count = count( $backorders );
 
@@ -68,10 +90,7 @@ class Backorders_Management extends Inventory_Management {
 					continue;
 				}
 
-				self::$backorders_list[] = array(
-					'url'   => get_edit_post_link( $back_order->get_id() ),
-					'title' => sprintf( '#%d', $back_order->get_id() ),
-				);
+				self::$backorders_list[] = $back_order->get_id();
 			}
 
 			if ( $count > count( $backorders ) ) {
@@ -90,10 +109,38 @@ class Backorders_Management extends Inventory_Management {
 	public static function output_connected_orders( $post ) {
 		if ( ! empty( self::$backorders_list ) ) {
 			echo '<ol class="zwoowh-backorders-list">';
-			foreach ( self::$backorders_list as $item ) {
-				printf( '<li><a href="%s">%s</a></li>', $item['url'], $item['title'] );
+			foreach ( self::format_order_links( self::$backorders_list ) as $item ) {
+				echo '<li>'. $item .'</li>';
 			}
 			echo '</ol>';
+		}
+	}
+
+	public static function format_order_links( $order_ids ) {
+		foreach ( $order_ids as $key => $order_id ) {
+			$order_ids[ $key ] = sprintf(
+				'<a href="%s">%s</a>',
+				get_edit_post_link( $order_id ),
+				sprintf( '#%d', $order_id )
+			);
+		}
+
+		return $order_ids;
+	}
+
+	public static function maybe_output_backorder_status( $item_id, $item, $product ) {
+		if ( is_callable( array( $product, 'get_stock_quantity' ) ) ) {
+			$product_id     = $product->get_id();
+			$availabile_qty = $product->get_stock_quantity();
+
+			$deficit = is_numeric( $availabile_qty )
+				? $item['quantity'] - $availabile_qty
+				: 0;
+
+			if ( $deficit > 0 ) {
+
+				echo '<div class="wc-order-item-avail-qty"><strong>' . __( 'Quantity overage:', 'zwoowh' ) . '</strong> <span>' . sprintf( __( '-%d (%d in stock)', 'zwhooh' ), $deficit, $availabile_qty ) . '</span></div>';
+			}
 		}
 	}
 
@@ -135,6 +182,16 @@ class Backorders_Management extends Inventory_Management {
 			}
 
 		} catch ( \Exception $e ) {}
+
+		if ( $created ) {
+			Order_Base::$success_send = array(
+				'redirect' => add_query_arg(
+					'backorders_generated',
+					implode( ',', array_values( $created ) ),
+					get_edit_post_link( $order->get_id(), 'edit' )
+				),
+			);
+		}
 
 		return $created;
 	}

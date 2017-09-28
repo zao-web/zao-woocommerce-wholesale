@@ -6,7 +6,7 @@ use Zao\ZaoWooCommerce_Wholesale\User, Zao\ZaoWooCommerce_Wholesale\Base;
 /**
  * The order admin interface for wholesale orders.
  */
-class Wholesale_Order extends Base {
+class Wholesale_Order extends Order_Base {
 	protected static $wholesale_custom_field = 'is_wholesale_order';
 	protected static $is_wholesale           = null;
 	protected static $is_edit_mode           = null;
@@ -33,11 +33,10 @@ class Wholesale_Order extends Base {
 			$this->backorders_management->init();
 			$this->shipstation->init();
 
-			$order_type_object = get_post_type_object( sanitize_text_field( 'shop_order' ) );
-			$order_type_object->labels->add_new_item = __( 'Add new wholesale order', 'zwoowh' );
+			parent::modify_order_label( 'add_new_item', __( 'Add new wholesale order', 'zwoowh' ) );
 
 			if ( self::is_wholesale_edit_context() ) {
-				$order_type_object->labels->edit_item = __( 'Edit wholesale order', 'zwoowh' );
+				parent::modify_order_label( 'edit_item', __( 'Edit wholesale order', 'zwoowh' ) );
 				add_action( 'admin_footer', array( $this, 'add_wholesale_order_button' ) );
 			}
 
@@ -360,13 +359,7 @@ class Wholesale_Order extends Base {
 	protected static function set_is_wholesale_and_edit_mode() {
 		global $pagenow;
 
-		self::$is_edit_mode = (
-			'post.php' === $pagenow
-			&& isset( $_GET['post'] )
-			&& 'shop_order' === get_post_type( $_GET['post'] )
-			&& ( $order = get_post( absint( $_GET['post'] ) ) )
-			&& $order->{self::$wholesale_custom_field}
-		);
+		self::$is_edit_mode = parent::is_wholesale( parent::get_order_being_edited() );
 
 		self::$is_wholesale = self::$is_edit_mode || (
 			'post-new.php' === $pagenow

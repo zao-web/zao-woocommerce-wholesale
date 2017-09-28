@@ -6,7 +6,7 @@ use Zao\ZaoWooCommerce_Wholesale\Base;
 /**
  * Handling quantities for the wholesale management interface.
  */
-class Inventory_Management extends Base {
+class Inventory_Management extends Order_Base {
 	protected static $quantities = array();
 	public function __construct() {}
 
@@ -23,9 +23,7 @@ class Inventory_Management extends Base {
 	}
 
 	public static function disable_payment_complete_stock_reduction_for_wholesale( $allowed, $order_id ) {
-		$order = wc_get_order( $order_id );
-
-		if ( $order && $order->get_meta( Wholesale_Order::get_wholesale_custom_field() ) ) {
+		if ( parent::is_wholesale( $order_id ) ) {
 			$allowed = false;
 		}
 
@@ -56,29 +54,11 @@ class Inventory_Management extends Base {
 	}
 
 	public static function ajax_reduce_all_stock_levels() {
-		self::handle_ajax_order_request_action( array( __CLASS__, 'reduce_and_track_stock_levels' ) );
+		parent::handle_ajax_order_request_action( array( __CLASS__, 'reduce_and_track_stock_levels' ) );
 	}
 
 	public static function ajax_restore_all_stock_levels() {
-		self::handle_ajax_order_request_action( array( __CLASS__, 'restore_tracked_stock_levels' ) );
-	}
-
-	protected static function handle_ajax_order_request_action( $callback ) {
-		if ( empty( $_GET['order_id'] ) || ! ( $order = wc_get_order( absint( $_GET['order_id'] ) ) ) ) {
-			wp_send_json_error();
-		}
-
-		$result = call_user_func( $callback, $order );
-
-		if ( is_wp_error( $result ) ) {
-			wp_send_json_error( $result->get_error_message() );
-		}
-
-		if ( $result ) {
-			wp_send_json_success();
-		}
-
-		wp_send_json_error();
+		parent::handle_ajax_order_request_action( array( __CLASS__, 'restore_tracked_stock_levels' ) );
 	}
 
 	/**
@@ -89,7 +69,7 @@ class Inventory_Management extends Base {
 	 */
 	public static function reduce_and_track_stock_levels( $order_id ) {
 		try {
-			$order = self::get_order( $order_id );
+			$order = parent::get_order( $order_id );
 
 			add_filter( 'woocommerce_order_item_quantity', array( __CLASS__, 'get_quantities' ), 10, 3 );
 			add_action( 'woocommerce_reduce_order_stock', array( __CLASS__, 'store_changed_quantities' ) );
@@ -129,7 +109,7 @@ class Inventory_Management extends Base {
 	 */
 	public static function restore_tracked_stock_levels( $order_id ) {
 		try {
-			$order = self::get_order( $order_id );
+			$order = parent::get_order( $order_id );
 
 			$products_stock = $order->get_meta( 'reduced_products_stock' );
 
@@ -174,18 +154,6 @@ class Inventory_Management extends Base {
 		} catch ( \Exception $e ) {
 			return false;
 		}
-	}
-
-	public static function get_order( $order_id ) {
-		$order = $order_id instanceof \WC_Order
-			? $order_id
-			: wc_get_order( $order_id );
-
-		if ( ! $order ) {
-			throw new Exception( 'Order not found.' );
-		}
-
-		return $order;
 	}
 
 }
