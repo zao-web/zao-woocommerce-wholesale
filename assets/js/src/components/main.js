@@ -470,8 +470,6 @@ window.ZWOOWH = window.ZWOOWH || {};
 		// Replace the WC click event w/ our own later.
 		$get( 'woocommerce-order-items' ).off( 'click', 'button.add-order-item' );
 
-		app.initVue();
-
 		app.$.select.on( 'change', app.toggleOrderBoxes );
 		app.$.lvls.show();
 
@@ -496,6 +494,8 @@ window.ZWOOWH = window.ZWOOWH || {};
 				app.step3();
 			}
 		} );
+
+		app.initVue();
 
 		app.triggerStep();
 	};
