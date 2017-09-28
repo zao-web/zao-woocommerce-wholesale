@@ -91,11 +91,7 @@ class Order_Cloner extends Accessible {
 			$this->meta = $this->orig_order->get_meta_data();
 
 			foreach ( $this->meta as $index => $meta ) {
-				if ( '_qb_invoice_id' === $meta->key ) {
-					unset( $this->meta[ $index ] );
-				} else {
-					unset( $this->meta[ $index ]->id );
-				}
+				unset( $this->meta[ $index ]->id );
 			}
 		}
 
