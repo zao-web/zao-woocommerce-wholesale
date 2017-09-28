@@ -313,6 +313,7 @@ class Backorders_Management extends Order_Base {
 				}
 			}
 
+			$order->set_status( 'wholesale-back' );
 			$order->calculate_totals();
 		}
 

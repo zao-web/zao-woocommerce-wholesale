@@ -55,6 +55,27 @@ class Wholesale_Order extends Order_Base {
 		}
 	}
 
+	public static function register_backorder_status() {
+		$label_count = __( 'Backordered (Wholesale) <span class="count">(%s)</span>', 'zwoowh' );
+
+		register_post_status( 'wc-wholesale-back', array(
+			'label'                     => __( 'Backordered (Wholesale)', 'zwoowh' ),
+			'public'                    => true,
+			'exclude_from_search'       => false,
+			'show_in_admin_all_list'    => true,
+			'show_in_admin_status_list' => true,
+			'label_count'               => _n_noop( $label_count, $label_count ),
+		) );
+
+		add_action( 'wc_order_statuses', array( __CLASS__, 'register_backorder_status_with_wc' ) );
+	}
+
+	public static function register_backorder_status_with_wc( $order_statuses ) {
+		$order_statuses['wc-wholesale-back'] = _x( 'Backordered (Wholesale)', 'Order status', 'zwoowh' );
+
+		return $order_statuses;
+	}
+
 	public function filter_admin_body_class( $body_class = '' ) {
 		$body_class = trim( $body_class ) . ' is-wholesale-order ' . ( self::is_wholesale_edit_context() ? 'edit-wholesale-order' : 'init-wholesale-order' );
 		return $body_class;
