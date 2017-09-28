@@ -31,7 +31,20 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.$.select    = $get( 'customer_user' );
 		app.$.addItems  = $( '.button.add-line-item' );
 		app.$.lineItems = $get( 'order_line_items' );
-		app.$.lvls      = $( '.all-stock-levels-wrap' );
+	};
+
+	app.block = function() {
+		$get( 'woocommerce-order-items' ).block({
+			message: null,
+			overlayCSS: {
+				background: '#fff',
+				opacity: 0.6
+			}
+		});
+	};
+
+	app.unblock = function() {
+		$get( 'woocommerce-order-items' ).unblock();
 	};
 
 	app.triggerStep = () => app[ 'step' + app.whichStep() ]();
@@ -121,7 +134,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			}
 		} );
 
-		$( '#woocommerce-order-items' ).on( 'click', 'button.add-order-item', () => app.vEvent.$emit( 'modalOpen' ) );
+		$get( 'woocommerce-order-items' ).on( 'click', 'button.add-order-item', () => app.vEvent.$emit( 'modalOpen' ) );
 
 		app.getProducts( 1 );
 	};
@@ -408,7 +421,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 	};
 
 	app.lvlsAjax = function( url ) {
-		app.$.lvls.find( '.spinner' ).addClass( 'is-active' );
+		app.block();
 
 		var params = {
 			type: 'GET',
@@ -417,10 +430,10 @@ window.ZWOOWH = window.ZWOOWH || {};
 				if ( response.success ) {
 					window.location.href = window.location.href;
 				}
-				app.$.lvls.find( '.spinner' ).removeClass( 'is-active' );
+				app.unblock();
 			},
 			error: function( jqXHR, textStatus, errorThrown ) {
-				app.$.lvls.find( '.spinner' ).removeClass( 'is-active' );
+				app.unblock();
 
 				var msg = app.l10n.msgReceived;
 				var err = jqXHR.responseJSON;
@@ -455,7 +468,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			.on( 'keydown', app.keyboardActions );
 
 		// Replace the WC click event w/ our own later.
-		$( '#woocommerce-order-items' ).off( 'click', 'button.add-order-item' );
+		$get( 'woocommerce-order-items' ).off( 'click', 'button.add-order-item' );
 
 		app.initVue();
 

@@ -1,5 +1,5 @@
 /**
- * Zao WooCommerce Wholesale - v0.1.0 - 2017-08-30
+ * Zao WooCommerce Wholesale - v0.1.0 - 2017-09-28
  * https://zao.is
  *
  * Copyright (c) 2017 Zao
@@ -330,7 +330,20 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.$.select = $get('customer_user');
 		app.$.addItems = $('.button.add-line-item');
 		app.$.lineItems = $get('order_line_items');
-		app.$.lvls = $('.all-stock-levels-wrap');
+	};
+
+	app.block = function () {
+		$get('woocommerce-order-items').block({
+			message: null,
+			overlayCSS: {
+				background: '#fff',
+				opacity: 0.6
+			}
+		});
+	};
+
+	app.unblock = function () {
+		$get('woocommerce-order-items').unblock();
 	};
 
 	app.triggerStep = function () {
@@ -428,7 +441,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			}
 		});
 
-		$('#woocommerce-order-items').on('click', 'button.add-order-item', function () {
+		$get('woocommerce-order-items').on('click', 'button.add-order-item', function () {
 			return app.vEvent.$emit('modalOpen');
 		});
 
@@ -720,7 +733,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 	};
 
 	app.lvlsAjax = function (url) {
-		app.$.lvls.find('.spinner').addClass('is-active');
+		app.block();
 
 		var params = {
 			type: 'GET',
@@ -729,10 +742,10 @@ window.ZWOOWH = window.ZWOOWH || {};
 				if (response.success) {
 					window.location.href = window.location.href;
 				}
-				app.$.lvls.find('.spinner').removeClass('is-active');
+				app.unblock();
 			},
 			error: function error(jqXHR, textStatus, errorThrown) {
-				app.$.lvls.find('.spinner').removeClass('is-active');
+				app.unblock();
 
 				var msg = app.l10n.msgReceived;
 				var err = jqXHR.responseJSON;
@@ -765,7 +778,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 		$(document).ajaxSuccess(app.checkAjaxResponseProducts).on('keydown', app.keyboardActions);
 
 		// Replace the WC click event w/ our own later.
-		$('#woocommerce-order-items').off('click', 'button.add-order-item');
+		$get('woocommerce-order-items').off('click', 'button.add-order-item');
 
 		app.initVue();
 

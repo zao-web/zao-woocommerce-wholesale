@@ -31,7 +31,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 		var $this = app.$get( 'shipstation-rates' ).find( ':selected' );
 		var price = $this.data( 'price' );
 		var value = $this.val();
-		ship.block();
+		app.block();
 		$.post( window.ajaxurl, {
 			action : 'set_shipstation_rates',
 			order_id : ship.order_id,
@@ -80,20 +80,6 @@ window.ZWOOWH = window.ZWOOWH || {};
 		}, 'json' );
 	};
 
-	ship.block = function() {
-		app.$.orderItems.block({
-			message: null,
-			overlayCSS: {
-				background: '#fff',
-				opacity: 0.6
-			}
-		});
-	};
-
-	ship.unblock = function() {
-		app.$.orderItems.unblock();
-	};
-
 	ship.spinner = function() {
 		app.$.shipSpinner.addClass( 'is-active' );
 	};
@@ -104,7 +90,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 	ship.reload_items = function() {
 
-		ship.block();
+		app.block();
 
 		$.ajax({
 			url:  window.ajaxurl,
@@ -117,7 +103,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			success: function( response ) {
 				app.$.orderItems.find( '.inside' ).empty();
 				app.$.orderItems.find( '.inside' ).append( response );
-				ship.unblock();
+				app.unblock();
 			}
 		});
 	};
