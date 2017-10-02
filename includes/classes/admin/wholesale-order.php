@@ -14,7 +14,7 @@ class Wholesale_Order extends Order_Base {
 	protected $quantity_management           = null;
 	protected $shipstation                   = null;
 	protected $inventory_management          = null;
-	protected $backorders_management          = null;
+	protected $backorders_management         = null;
 
 	public function __construct() {
 		if ( self::is_wholesale_context() ) {
@@ -37,7 +37,7 @@ class Wholesale_Order extends Order_Base {
 
 			if ( self::is_wholesale_edit_context() ) {
 				parent::modify_order_label( 'edit_item', __( 'Edit wholesale order', 'zwoowh' ) );
-				add_action( 'admin_footer', array( $this, 'add_wholesale_order_button' ) );
+				add_action( 'admin_footer', array( $this, 'add_wholesale_order_buttons' ) );
 			}
 
 			add_filter( 'woocommerce_get_price_excluding_tax', array( $this, 'filter_wholesale_pricing_when_adding_order_item' ), 10, 3 );
@@ -51,7 +51,7 @@ class Wholesale_Order extends Order_Base {
 
 			add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
 		} else {
-			add_action( 'admin_head', array( $this, 'maybe_add_wholesale_order_button' ), 9999 );
+			add_action( 'admin_head', array( $this, 'maybe_add_wholesale_order_buttons' ), 9999 );
 		}
 	}
 
@@ -310,7 +310,7 @@ class Wholesale_Order extends Order_Base {
 		return $product_prices[ $product_id ];
 	}
 
-	public function maybe_add_wholesale_order_button() {
+	public function maybe_add_wholesale_order_buttons() {
 		if ( ! function_exists( 'get_current_screen' ) ) {
 			return;
 		}
@@ -322,15 +322,16 @@ class Wholesale_Order extends Order_Base {
 			&& in_array( $screen->base, array( 'edit', 'post' ) )
 			&& 'shop_order' === $screen->post_type
 		) {
-			add_action( 'admin_footer', array( $this, 'add_wholesale_order_button' ) );
+			add_action( 'admin_footer', array( $this, 'add_wholesale_order_buttons' ) );
 		}
 	}
 
-	public function add_wholesale_order_button() {
+	public function add_wholesale_order_buttons() {
 		?>
 		<script type="text/javascript">
 			jQuery( function( $ ) {
 				$( 'a.page-title-action' ).after( '<a href="<?php echo esc_url( Menu::new_wholesale_order_url() ); ?>" class="page-title-action alignright"><?php esc_html_e( 'Add wholesale order', 'zwoowh' ); ?></a>' );
+				$( 'a.page-title-action' ).after( '<a href="<?php echo esc_url( add_query_arg( 'export_wholesale_backorders', 'true' ) ); ?>" class="page-title-action alignright"><?php esc_html_e( 'Export wholesale backorders', 'zwoowh' ); ?></a>' );
 			});
 		</script>
 		<?php
