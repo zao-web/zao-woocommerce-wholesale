@@ -52,6 +52,7 @@ class Wholesale_Order extends Order_Base {
 			add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
 		} else {
 			add_action( 'admin_head', array( $this, 'maybe_add_wholesale_order_buttons' ), 9999 );
+			add_action( 'admin_init', array( $this, 'process_backorder_export' ) );
 		}
 	}
 
@@ -334,6 +335,78 @@ class Wholesale_Order extends Order_Base {
 			});
 		</script>
 		<?php
+	}
+
+	public function process_backorder_export() {
+		 if ( ! current_user_can( 'view_woocommerce_reports' ) ) {
+			 return;
+		 }
+
+		 if ( ! isset( $_GET['export_wholesale_backorders'] ) ) {
+			 return;
+		 }
+
+		 $csv_object = self::get_rows();
+
+		$csv = [
+			'Product Name',
+			'SKU',
+			'Backorder Level'
+		];
+
+		 foreach ( $csv_object as $sku => $row ) {
+			 $csv[] = [
+				 $row['name'],
+				 $sku,
+				 $row['qty']
+			 ];
+		 }
+
+		 self::generate_csv( $csv, 'bt_backorder_report_' . date( "m-j-Y-g-i-a" ) . '.csv' );
+	}
+
+	private function get_rows() {
+		$orders = wc_get_orders( array( 'status' => 'wc-wholesale-back', 'limit' => -1 ) );
+
+		if ( empty( $orders ) ) {
+			return array();
+		}
+
+		$csv = [];
+
+	   foreach ( $order->get_items() as $item ) {
+		   $sku  = $item->get_product()->get_sku();
+		   $name = $item->get_name();
+		   $qty  = $item->get_quantity();
+
+		   if ( ! isset( $csv[ $sku ] ) ) {
+			   $csv[ $sku ] = compact( 'name', 'qty' );
+		   } else {
+			   $csv[ $sku ]['qty'] += $qty;
+		   }
+	   }
+
+	   return $csv;
+	}
+
+	private function generate_csv( $rows, $filename ) {
+        header( "Content-Type: text/csv" );
+        header( "Content-Disposition: attachment; filename=$file_name" );
+
+		nocache_headers();
+
+        # Start the ouput
+        $output = fopen( "php://output", "w" );
+
+         # Then loop through the rows
+        foreach ( $rows as $row ) {
+            # Add the rows to the body
+            fputcsv( $output, $row ); // here you can change delimiter/enclosure
+        }
+
+        # Close the stream off
+        fclose( $output );
+
 	}
 
 	public function save_wholesale_order_meta( $post_id ) {
