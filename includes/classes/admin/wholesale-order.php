@@ -374,19 +374,21 @@ class Wholesale_Order extends Order_Base {
 
 		$csv = [];
 
-	   foreach ( $order->get_items() as $item ) {
-		   $sku  = $item->get_product()->get_sku();
-		   $name = $item->get_name();
-		   $qty  = $item->get_quantity();
+		foreach ( $orders as $order ) {
+			foreach ( $order->get_items() as $item ) {
+				$sku  = $item->get_product()->get_sku();
+				$name = $item->get_name();
+				$qty  = $item->get_quantity();
 
-		   if ( ! isset( $csv[ $sku ] ) ) {
-			   $csv[ $sku ] = compact( 'name', 'qty' );
-		   } else {
-			   $csv[ $sku ]['qty'] += $qty;
-		   }
-	   }
+				if ( ! isset( $csv[ $sku ] ) ) {
+					$csv[ $sku ] = compact( 'name', 'qty' );
+				} else {
+					$csv[ $sku ]['qty'] += $qty;
+				}
+			}
+		}
 
-	   return $csv;
+		return $csv;
 	}
 
 	private function generate_csv( $rows, $filename ) {
