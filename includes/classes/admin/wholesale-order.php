@@ -393,7 +393,7 @@ class Wholesale_Order extends Order_Base {
 
 	private function generate_csv( $rows, $filename ) {
         header( "Content-Type: text/csv" );
-        header( "Content-Disposition: attachment; filename=$file_name" );
+        header( "Content-Disposition: attachment; filename=$filename" );
 
 		nocache_headers();
 
