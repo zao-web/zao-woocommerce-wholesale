@@ -338,31 +338,34 @@ class Wholesale_Order extends Order_Base {
 	}
 
 	public function process_backorder_export() {
-		 if ( ! current_user_can( 'view_woocommerce_reports' ) ) {
-			 return;
-		 }
+		if ( ! current_user_can( 'view_woocommerce_reports' ) ) {
+			return;
+		}
 
-		 if ( ! isset( $_GET['export_wholesale_backorders'] ) ) {
-			 return;
-		 }
+		if ( ! isset( $_GET['export_wholesale_backorders'] ) ) {
+			return;
+		}
 
-		 $csv_object = self::get_rows();
+		$csv_object = self::get_rows();
 
 		$csv = [
-			'Product Name',
-			'SKU',
-			'Backorder Level'
+			[	'Product Name',
+				'SKU',
+				'Backorder Level'
+			]
 		];
 
-		 foreach ( $csv_object as $sku => $row ) {
-			 $csv[] = [
-				 $row['name'],
-				 $sku,
-				 $row['qty']
-			 ];
-		 }
+		foreach ( $csv_object as $sku => $row ) {
+			$csv[] = [
+				$row['name'],
+				$sku,
+				$row['qty']
+			];
+		}
 
-		 self::generate_csv( $csv, 'bt_backorder_report_' . date( "m-j-Y-g-i-a" ) . '.csv' );
+		self::generate_csv( $csv, 'bt_backorder_report_' . date( "m-j-Y-g-i-a" ) . '.csv' );
+
+		exit;
 	}
 
 	private function get_rows() {
