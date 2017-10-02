@@ -37,13 +37,13 @@ class Inventory_Management extends Order_Base {
 		if ( ! empty( $has_been_reduced ) ) {
 			$class   = 'restore-all-stock-levels-button';
 			$text    = __( 'Restore all product stock levels', 'zwoowh' );
-			$confirm = __( 'This will reduce the stock levels for all the products in the order by the quantities selected. Are you sure you want to proceed?', 'zwoowh' );
-			$action  = 'zwoowh_reduce_all_stock_levels';
+			$confirm = __( 'This will restore the stock levels for all the products in the order by the quantities originally deducted. Are you sure you want to proceed?', 'zwoowh' );
+			$action  = 'zwoowh_restore_all_stock_levels';
 		} else {
 			$class   = 'reduce-all-stock-levels-button';
 			$text    = __( 'Reduce all product stock levels', 'zwoowh' );
-			$confirm = __( 'This will restore the stock levels for all the products in the order by the quantities originally deducted. Are you sure you want to proceed?', 'zwoowh' );
-			$action  = 'zwoowh_restore_all_stock_levels';
+			$confirm = __( 'This will reduce the stock levels for all the products in the order by the quantities selected. Are you sure you want to proceed?', 'zwoowh' );
+			$action  = 'zwoowh_reduce_all_stock_levels';
 		}
 
 		?>
