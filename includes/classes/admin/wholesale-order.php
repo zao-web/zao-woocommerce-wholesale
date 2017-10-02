@@ -330,8 +330,7 @@ class Wholesale_Order extends Order_Base {
 		?>
 		<script type="text/javascript">
 			jQuery( function( $ ) {
-				$( 'a.page-title-action' ).after( '<a href="<?php echo esc_url( Menu::new_wholesale_order_url() ); ?>" class="page-title-action alignright"><?php esc_html_e( 'Add wholesale order', 'zwoowh' ); ?></a>' );
-				$( 'a.page-title-action' ).after( '<a href="<?php echo esc_url( add_query_arg( 'export_wholesale_backorders', 'true' ) ); ?>" class="page-title-action alignright"><?php esc_html_e( 'Export wholesale backorders', 'zwoowh' ); ?></a>' );
+				$( 'a.page-title-action' ).after( '<a href="<?php echo esc_url( Menu::new_wholesale_order_url() ); ?>" class="page-title-action alignright"><?php esc_html_e( 'Add wholesale order', 'zwoowh' ); ?></a> <a href="<?php echo esc_url( add_query_arg( 'export_wholesale_backorders', 'true' ) ); ?>" class="page-title-action alignright"><?php esc_html_e( 'Export wholesale backorders', 'zwoowh' ); ?></a>' );
 			});
 		</script>
 		<?php
