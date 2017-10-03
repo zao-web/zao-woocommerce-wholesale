@@ -18,6 +18,21 @@ abstract class Order_Base extends Base {
 		return $order;
 	}
 
+	public static function is_backorder( $order_id ) {
+		if ( ! $order_id ) {
+			return false;
+		}
+
+		try {
+			$order = self::get_order( $order_id );
+
+			return $order ? $order->get_meta( 'original_order' ) : false;
+
+		} catch ( Exception $e ) {
+			return false;
+		}
+	}
+
 	public static function get_order_being_edited() {
 		global $pagenow;
 		if ( 'post.php' !== $pagenow || ! isset( $_GET['post'] ) ) {

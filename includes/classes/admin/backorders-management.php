@@ -35,8 +35,7 @@ class Backorders_Management extends Order_Base {
 	}
 
 	public static function maybe_change_order_edit_label() {
-		$order = parent::get_order_being_edited();
-		if ( $order && $order->get_meta( 'original_order' ) ) {
+		if ( parent::is_backorder( parent::get_order_being_edited() ) ) {
 			parent::modify_order_label( 'edit_item', __( 'Edit wholesale backorder', 'zwoowh' ) );
 		}
 	}
@@ -57,7 +56,7 @@ class Backorders_Management extends Order_Base {
 			return;
 		}
 
-		$title = $order->get_meta( 'original_order' )
+		$title = parent::is_backorder( $order )
 			? __( 'Original Wholesale Order', 'zwoowh' )
 			: __( 'Connected Backorders', 'zwoowh' );
 
@@ -146,7 +145,7 @@ class Backorders_Management extends Order_Base {
 
 	public static function add_split_order_button( $order ) {
 		// Do not show split button on orders which are already a backorder.
-		if ( $order->get_meta( 'original_order' ) ) {
+		if ( parent::is_backorder( $order ) ) {
 			return;
 		}
 
