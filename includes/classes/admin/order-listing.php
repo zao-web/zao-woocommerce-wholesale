@@ -11,7 +11,7 @@ class Order_Listing extends Order_Base {
 	public function init() {
 		add_action( 'admin_print_styles', array( $this, 'style_wholesale_tag' ), 999 );
 		add_action( 'manage_shop_order_posts_custom_column', array( $this, 'maybe_add_wholesale_tag' ), -5 );
-		if ( isset( $_GET['wholesale_only'] ) ) {
+		if ( isset( $_GET['wholesale_only'] ) || isset( $_GET['backorders_only'] ) ) {
 			add_action( 'pre_get_posts', array( $this, 'maybe_filter_to_wholesale_only' ) );
 		}
 	}
@@ -30,6 +30,25 @@ class Order_Listing extends Order_Base {
 					font-size: .8em;
 					font-weight: bold;
 					color: #000;
+				}
+				mark.wholesale-back::after {
+					content: '\e033'; /* Use the on-hold icon. */
+					color: #ffba00;
+					font-family: WooCommerce;
+					speak: none;
+					font-weight: 400;
+					font-variant: normal;
+					text-transform: none;
+					line-height: 1;
+					-webkit-font-smoothing: antialiased;
+					margin: 0;
+					text-indent: 0;
+					position: absolute;
+					top: 0;
+					left: 0;
+					width: 100%;
+					height: 100%;
+					text-align: center;
 				}
 			</style>
 			<?php
@@ -56,12 +75,18 @@ class Order_Listing extends Order_Base {
 	}
 
 	public function add_wholesale_tag( $column ) {
+		global $the_order;
 		if ( 'order_title' !== $column || ! $this->is_wholesale ) {
 			return;
 		}
 
 		$filter_url = add_query_arg( 'wholesale_only', 1 );
 		$wholesale_tag = '<a class="wholesale-tag" href="' . esc_url( $filter_url )  . '"><small>' . __( 'Wholesale', 'zwoowh' ) . '</small></a>';
+
+		if ( parent::is_backorder( $the_order ) ) {
+			$filter_url = add_query_arg( 'backorders_only', 1 );
+			$wholesale_tag .= '<a class="wholesale-tag is-backorder" href="' . esc_url( $filter_url )  . '"><small>' . __( 'Backorder', 'zwoowh' ) . '</small></a>';
+		}
 
 		echo str_replace( '</strong></a>', '</strong></a>' . $wholesale_tag, ob_get_clean() );
 	}
@@ -78,7 +103,7 @@ class Order_Listing extends Order_Base {
 		}
 
 		$meta_query[] = array(
-			'key' => Wholesale_Order::get_wholesale_custom_field(),
+			'key' => isset( $_GET['backorders_only'] ) ? 'original_order' : Wholesale_Order::get_wholesale_custom_field(),
 			'compare' => 'EXISTS',
 		);
 
