@@ -5,8 +5,12 @@ module.exports = {
 	},
 	main: {
 		src: [
-			'assets/js/src/zao-woocommerce-wholesale.js'
+			'assets/js/src/zao-woocommerce-wholesale.js',
+			'assets/js/src/shipstation.js'
 		],
-		dest: 'assets/js/zao-woocommerce-wholesale.js'
+		dest: [
+			'assets/js/zao-woocommerce-wholesale.js',
+			'assets/js/src/shipstation.js'
+		]
 	}
 };

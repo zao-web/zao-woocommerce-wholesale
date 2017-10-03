@@ -14,10 +14,10 @@ class Report extends Base {
 		add_filter( 'woocommerce_admin_reports', array( $this, 'add_wholesale_report' ) );
 		add_filter( 'wc_admin_reports_path'    , array( $this, 'add_wholesale_report_path' ), 10, 3 );
 		add_filter( 'woocommerce_reports_get_order_report_query', function( $query ) {
-			 error_log( var_export( $query['where'], 1 ) );
+			 // error_log( var_export( $query['where'], 1 ) );
 			 $query['where'] = str_replace( "meta_is_wholesale_order.meta_value IS NULL 'zwoowh_null_test'", 'meta_is_wholesale_order.post_id IS NULL', $query['where'] );
 
- 			 error_log( var_export( $query['where'], 1 ) );
+ 			 // error_log( var_export( $query['where'], 1 ) );
 			 return $query;
 		 } );
 		add_filter( 'woocommerce_reports_get_order_report_data_args', function( $args ) {

@@ -1,5 +1,5 @@
 /**
- * Zao WooCommerce Wholesale - v0.1.0 - 2017-08-15
+ * Zao WooCommerce Wholesale - v0.1.0 - 2017-09-28
  * https://zao.is
  *
  * Copyright (c) 2017 Zao
@@ -211,9 +211,7 @@ exports.default = {
 				var product = this.products.find(function (product) {
 					return id === product.id;
 				});
-				if (product.manage_stock && qty > product.stock_quantity) {
-					qty = product.stock_quantity;
-				}
+
 
 				product.qty = qty;
 			}
@@ -322,6 +320,8 @@ window.ZWOOWH = window.ZWOOWH || {};
 		return $(document.getElementById(id));
 	}
 
+	app.$get = $get;
+
 	app.modalOpened = false;
 
 	app.cache = function () {
@@ -330,6 +330,20 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.$.select = $get('customer_user');
 		app.$.addItems = $('.button.add-line-item');
 		app.$.lineItems = $get('order_line_items');
+	};
+
+	app.block = function () {
+		$get('woocommerce-order-items').block({
+			message: null,
+			overlayCSS: {
+				background: '#fff',
+				opacity: 0.6
+			}
+		});
+	};
+
+	app.unblock = function () {
+		$get('woocommerce-order-items').unblock();
 	};
 
 	app.triggerStep = function () {
@@ -427,7 +441,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			}
 		});
 
-		$('#woocommerce-order-items').on('click', 'button.add-order-item', function () {
+		$get('woocommerce-order-items').on('click', 'button.add-order-item', function () {
 			return app.vEvent.$emit('modalOpen');
 		});
 
@@ -499,7 +513,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 				app.vEvent.$emit('productsFetched', page, done);
 			},
 			error: function error(jqXHR, textStatus, errorThrown) {
-				var err = app.errMessage(jqXHR);
+				var err = app.stockErrMessage(jqXHR, textStatus, errorThrown);
 				console.warn('error', { jqXHR: jqXHR, textStatus: textStatus, errorThrown: errorThrown });
 				window.alert(err);
 			}
@@ -551,7 +565,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 				app.getProductVariations();
 			},
 			error: function error(jqXHR) {
-				return console.error(app.errMessage(jqXHR));
+				return console.error(app.stockErrMessage(jqXHR));
 			}
 		};
 
@@ -614,12 +628,23 @@ window.ZWOOWH = window.ZWOOWH || {};
 		app.vEvent.$emit('modalClose');
 	};
 
-	app.errMessage = function (jqXHR) {
-		var msg = app.l10n.somethingWrong;
+	app.stockErrMessage = function (jqXHR, textStatus, errorThrown) {
+		return app.errMessage(app.l10n.somethingWrong, jqXHR, textStatus, errorThrown);
+	};
+
+	app.errMessage = function (msg, jqXHR, textStatus, errorThrown) {
 		var err = jqXHR.responseJSON;
 
 		if (err && err.code && err.message) {
 			msg = jqXHR.status + ' ' + err.code + ' - ' + err.message;
+		}
+
+		if (errorThrown) {
+			msg += ' ' + app.l10n.msgReceived;
+			msg += "\n\n" + errorThrown;
+			if (textStatus) {
+				msg += ' (' + textStatus + ')';
+			}
 		}
 
 		return msg;
@@ -686,6 +711,42 @@ window.ZWOOWH = window.ZWOOWH || {};
 		}
 	};
 
+	app.doAjaxButton = function (evt) {
+		var data = $(this).data();
+		evt.preventDefault();
+
+		if (!window.confirm(data.confirmation)) {
+			return;
+		}
+
+		var url = window.ajaxurl + '?action=' + data.action + '&order_id=' + $get('post_ID').val();
+
+		app.ajaxRefresh(url);
+	};
+
+	app.ajaxRefresh = function (url) {
+		app.block();
+
+		var params = {
+			type: 'GET',
+			url: url,
+			success: function success(response) {
+				if (response.success) {
+					window.location.href = response.data && response.data.redirect ? response.data.redirect : window.location.href;
+				} else {
+					app.unblock();
+				}
+			},
+			error: function error(jqXHR, textStatus, errorThrown) {
+				app.unblock();
+				var msg = app.errMessage(app.l10n.msgReceived, jqXHR, textStatus, errorThrown);
+				console.error(msg);
+			}
+		};
+
+		$.ajax(params);
+	};
+
 	app.init = function () {
 		console.warn('ZWOOWH init');
 		app.cache();
@@ -696,11 +757,10 @@ window.ZWOOWH = window.ZWOOWH || {};
 		$(document).ajaxSuccess(app.checkAjaxResponseProducts).on('keydown', app.keyboardActions);
 
 		// Replace the WC click event w/ our own later.
-		$('#woocommerce-order-items').off('click', 'button.add-order-item');
-
-		app.initVue();
+		$get('woocommerce-order-items').off('click', 'button.add-order-item');
 
 		app.$.select.on('change', app.toggleOrderBoxes);
+		$('.zwoowh-action-button-wrap').show();
 
 		// disable mousewheel on a input number field when in focus
 		// (to prevent Chromium browsers change the value when scrolling)
@@ -710,7 +770,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 			});
 		}).on('blur', '#quantities-form input[type=number]', function (evt) {
 			$(this).off('mousewheel.disableScroll');
-		});
+		}).on('click', '.reduce-all-stock-levels-button', app.doAjaxButton).on('click', '.restore-all-stock-levels-button', app.doAjaxButton).on('click', '.split-into-backorders-button', app.doAjaxButton);
 
 		if (app.replaceDropdown) {
 			app.$.select.select2();
@@ -721,6 +781,8 @@ window.ZWOOWH = window.ZWOOWH || {};
 				app.step3();
 			}
 		});
+
+		app.initVue();
 
 		app.triggerStep();
 	};

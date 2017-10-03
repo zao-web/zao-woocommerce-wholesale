@@ -13,7 +13,7 @@ module.exports = {
 		}
 	},
 	js: {
-		files: ['assets/js/src/**/*.js', 'assets/js/src/components/**/*.vue', 'assets/js/vendor/**/*.js'],
+		files: ['assets/js/src/**/*.js', 'assets/js/src/components/**/*.vue', 'assets/js/vendor/**/*.js', 'assets/js/shipstation.js'],
 			tasks: ['js'],
 			options: {
 			debounceDelay: 500

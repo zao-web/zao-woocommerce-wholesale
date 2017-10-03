@@ -3,7 +3,7 @@
  * Plugin Name: Zao WooCommerce Wholesale
  * Plugin URI:  https://zao.is
  * Description: Generate wholesale orders for WooCommerce
- * Version:     0.1.0
+ * Version:     0.1.0.2
  * Author:      Zao
  * Author URI:  https://zao.is
  * Text Domain: zwoowh
@@ -36,7 +36,7 @@
  */
 
 // Useful global constants
-define( 'ZWOOWH_VERSION', defined( 'WP_DEBUG' ) && WP_DEBUG ? time() : '0.1.0' );
+define( 'ZWOOWH_VERSION', defined( 'WP_DEBUG' ) && WP_DEBUG ? time() : '0.1.0.2' );
 define( 'ZWOOWH_URL',     plugin_dir_url( __FILE__ ) );
 define( 'ZWOOWH_PATH',    dirname( __FILE__ ) . '/' );
 define( 'ZWOOWH_INC',     ZWOOWH_PATH . 'includes/' );

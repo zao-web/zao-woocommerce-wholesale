@@ -6,15 +6,22 @@ use Zao\ZaoWooCommerce_Wholesale\User, Zao\ZaoWooCommerce_Wholesale\Base;
 /**
  * The order admin interface for wholesale orders.
  */
-class Wholesale_Order extends Base {
-	protected static $is_wholesale = null;
-	protected static $is_edit_mode = null;
-	protected $products = array();
-	public $quantity_management = null;
+class Wholesale_Order extends Order_Base {
+	protected static $wholesale_custom_field = 'is_wholesale_order';
+	protected static $is_wholesale           = null;
+	protected static $is_edit_mode           = null;
+	protected $products                      = array();
+	protected $quantity_management           = null;
+	protected $shipstation                   = null;
+	protected $inventory_management          = null;
+	protected $backorders_management         = null;
 
 	public function __construct() {
 		if ( self::is_wholesale_context() ) {
 			$this->quantity_management = new Quantity_Management;
+			$this->inventory_management = new Inventory_Management;
+			$this->backorders_management = new Backorders_Management;
+			$this->shipstation = new ShipStation;
 		}
 	}
 
@@ -22,15 +29,20 @@ class Wholesale_Order extends Base {
 		if ( self::is_wholesale_context() ) {
 
 			$this->quantity_management->init();
+			$this->inventory_management->init();
+			$this->backorders_management->init();
+			$this->shipstation->init();
 
-			$order_type_object = get_post_type_object( sanitize_text_field( 'shop_order' ) );
-			$order_type_object->labels->add_new_item = __( 'Add new wholesale order', 'zwoowh' );
+			parent::modify_order_label( 'add_new_item', __( 'Add new wholesale order', 'zwoowh' ) );
+
 			if ( self::is_wholesale_edit_context() ) {
-				$order_type_object->labels->edit_item = __( 'Edit wholesale order', 'zwoowh' );
-				add_action( 'admin_footer', array( $this, 'add_wholesale_order_button' ) );
+				parent::modify_order_label( 'edit_item', __( 'Edit wholesale order', 'zwoowh' ) );
+				add_action( 'admin_footer', array( $this, 'add_wholesale_order_buttons' ) );
 			}
 
-			add_filter( 'woocommerce_get_price_excluding_tax', array( $this, 'filter_wholesale_pricing' ), 10, 3 );
+			add_filter( 'woocommerce_get_price_excluding_tax', array( $this, 'filter_wholesale_pricing_when_adding_order_item' ), 10, 3 );
+			add_filter( 'woocommerce_product_get_price', array( $this, 'maybe_filter_wholesale_pricing' ), 10, 2 );
+			add_filter( 'woocommerce_product_variation_get_price', array( $this, 'maybe_filter_wholesale_pricing' ), 10, 2 );
 			add_action( 'woocommerce_process_shop_order_meta', array( $this, 'save_wholesale_order_meta' ) );
 			add_filter( 'admin_body_class'     , array( $this, 'filter_admin_body_class' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
@@ -39,8 +51,30 @@ class Wholesale_Order extends Base {
 
 			add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
 		} else {
-			add_action( 'admin_head', array( $this, 'maybe_add_wholesale_order_button' ), 9999 );
+			add_action( 'admin_head', array( $this, 'maybe_add_wholesale_order_buttons' ), 9999 );
+			add_action( 'admin_init', array( $this, 'process_backorder_export' ) );
 		}
+	}
+
+	public static function register_backorder_status() {
+		$label_count = __( 'Backordered (Wholesale) <span class="count">(%s)</span>', 'zwoowh' );
+
+		register_post_status( 'wc-wholesale-back', array(
+			'label'                     => __( 'Backordered (Wholesale)', 'zwoowh' ),
+			'public'                    => true,
+			'exclude_from_search'       => false,
+			'show_in_admin_all_list'    => true,
+			'show_in_admin_status_list' => true,
+			'label_count'               => _n_noop( $label_count, $label_count ),
+		) );
+
+		add_action( 'wc_order_statuses', array( __CLASS__, 'register_backorder_status_with_wc' ) );
+	}
+
+	public static function register_backorder_status_with_wc( $order_statuses ) {
+		$order_statuses['wc-wholesale-back'] = _x( 'Backordered (Wholesale)', 'Order status', 'zwoowh' );
+
+		return $order_statuses;
 	}
 
 	public function filter_admin_body_class( $body_class = '' ) {
@@ -52,10 +86,13 @@ class Wholesale_Order extends Base {
 		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 		wp_enqueue_style( 'zao-woocommerce-wholesale', ZWOOWH_URL . "assets/css/zao-woocommerce-wholesale{$min}.css", array(), ZWOOWH_VERSION );
 		wp_register_script( 'zao-woocommerce-wholesale', ZWOOWH_URL . "assets/js/zao-woocommerce-wholesale{$min}.js", array(), ZWOOWH_VERSION, true );
+		$this->shipstation->register_script();
 		add_action( 'admin_footer', array( $this, 'enqueue_and_localize_data' ), 12 );
 	}
 
 	public function enqueue_and_localize_data() {
+		$this->shipstation->enqueue_script();
+
 		wp_enqueue_script( 'zao-woocommerce-wholesale' );
 		$data = apply_filters( 'zao_woocommerce_wholesale_l10n', array(
 			'rest_url'          => rest_url(),
@@ -118,6 +155,7 @@ class Wholesale_Order extends Base {
 			'allCategories' => get_terms( 'product_cat', array( 'fields' => 'names', 'update_term_meta_cache' => false ) ),
 			'l10n' => array(
 				'somethingWrong'       => __( 'Something went wrong and we were not able to retrieve the wholesale products.', 'zwoowh' ),
+				'msgReceived'          => __( 'The error found:', 'zwoowh' ),
 				'noStockTitle'         => __( 'This item is out of stock.', 'zwoowh' ),
 				'addProductsBtn'       => __( 'Add Products', 'zwoowh' ),
 				'clearBtn'             => __( 'Clear', 'zwoowh' ),
@@ -130,6 +168,7 @@ class Wholesale_Order extends Base {
 				'closeBtn'             => __( 'Close product selector', 'zwoowh' ),
 				'insertBtn'            => __( 'Insert', 'zwoowh' ),
 				'origPrice'            => __( 'Original Price: $%d', 'zwoowh' ),
+				'selectShipping'       => __( 'Select a shipping rate', 'zwoowh' ),
 			),
 		) );
 
@@ -212,7 +251,7 @@ class Wholesale_Order extends Base {
 	 * @param  [type] $product  [description]
 	 * @return [type]           [description]
 	 */
-	public function filter_wholesale_pricing( $price, $quantity, $product ) {
+	public function filter_wholesale_pricing_when_adding_order_item( $price, $quantity, $product ) {
 		if ( ! is_admin() || ! current_user_can( 'publish_shop_orders' ) ) {
 			return $price;
 		}
@@ -221,22 +260,58 @@ class Wholesale_Order extends Base {
 			return $price;
 		}
 
-		// Margins are currently set on parent product, not per-variation
-		if ( 'variation' === $product->get_type() ) {
-			$_product = wc_get_product( $product->get_parent_id() );
-			$margin   = $_product->get_meta( 'wholesale_margin' );
-		} else {
-			$margin = $product->get_meta( 'wholesale_margin' );
-		}
-
-		if ( $margin ) {
-			$price = round( $price / $margin, 2 );
-		}
-
-		return $price;
+		return $this->modify_wholesale_price( $price, $product );
 	}
 
-	public function maybe_add_wholesale_order_button() {
+	/**
+	 * Filters product price in admin when adding items to the cart.
+	 *
+	 * @param  [type] $price    [description]
+	 * @param  [type] $product  [description]
+	 * @return [type]           [description]
+	 */
+	public function maybe_filter_wholesale_pricing( $price, $product ) {
+		if ( ! is_admin() || ! current_user_can( 'publish_shop_orders' ) ) {
+			return $price;
+		}
+
+		return $this->modify_wholesale_price( $price, $product );
+	}
+
+	/**
+	 * Filters product price in admin when adding items to the cart.
+	 *
+	 * @param  [type] $price    [description]
+	 * @param  [type] $product  [description]
+	 * @return [type]           [description]
+	 */
+	public function modify_wholesale_price( $price, $product ) {
+		static $product_prices = array();
+
+		// Margins are currently set on parent product, not per-variation
+		if ( 'variation' === $product->get_type() ) {
+			$product = wc_get_product( $product->get_parent_id() );
+		}
+
+		$product_id = $product->get_id();
+
+		// If margin, and we have not already applied margin,
+		if ( ! isset( $product_prices[ $product_id ] ) ) {
+			$margin = $product->get_meta( 'wholesale_margin' );
+
+			if ( $margin ) {
+				// Let's apply the wholesale margin.
+				$price = round( $price / $margin, 2 );
+			}
+
+			// And flag, because we never want to apply double-margin.
+			$product_prices[ $product_id ] = $price;
+		}
+
+		return $product_prices[ $product_id ];
+	}
+
+	public function maybe_add_wholesale_order_buttons() {
 		if ( ! function_exists( 'get_current_screen' ) ) {
 			return;
 		}
@@ -248,25 +323,102 @@ class Wholesale_Order extends Base {
 			&& in_array( $screen->base, array( 'edit', 'post' ) )
 			&& 'shop_order' === $screen->post_type
 		) {
-			add_action( 'admin_footer', array( $this, 'add_wholesale_order_button' ) );
+			add_action( 'admin_footer', array( $this, 'add_wholesale_order_buttons' ) );
 		}
 	}
 
-	public function add_wholesale_order_button() {
+	public function add_wholesale_order_buttons() {
 		?>
 		<script type="text/javascript">
 			jQuery( function( $ ) {
-				$( 'a.page-title-action' ).after( '<a href="<?php echo esc_url( Menu::new_wholesale_order_url() ); ?>" class="page-title-action alignright"><?php esc_html_e( 'Add wholesale order', 'zwoowh' ); ?></a>' );
+				$( 'a.page-title-action' ).after( '<a href="<?php echo esc_url( Menu::new_wholesale_order_url() ); ?>" class="page-title-action alignright"><?php esc_html_e( 'Add wholesale order', 'zwoowh' ); ?></a> <a href="<?php echo esc_url( add_query_arg( 'export_wholesale_backorders', 'true' ) ); ?>" class="page-title-action alignright"><?php esc_html_e( 'Export wholesale backorders', 'zwoowh' ); ?></a>' );
 			});
 		</script>
 		<?php
+	}
+
+	public function process_backorder_export() {
+		if ( ! current_user_can( 'view_woocommerce_reports' ) ) {
+			return;
+		}
+
+		if ( ! isset( $_GET['export_wholesale_backorders'] ) ) {
+			return;
+		}
+
+		$csv_object = self::get_rows();
+
+		$csv = [
+			[	'Product Name',
+				'SKU',
+				'Backorder Level'
+			]
+		];
+
+		foreach ( $csv_object as $sku => $row ) {
+			$csv[] = [
+				$row['name'],
+				$sku,
+				$row['qty']
+			];
+		}
+
+		self::generate_csv( $csv, 'bt_backorder_report_' . date( "m-j-Y-g-i-a" ) . '.csv' );
+
+		exit;
+	}
+
+	private function get_rows() {
+		$orders = wc_get_orders( array( 'status' => 'wc-wholesale-back', 'limit' => -1 ) );
+
+		if ( empty( $orders ) ) {
+			return array();
+		}
+
+		$csv = [];
+
+		foreach ( $orders as $order ) {
+			foreach ( $order->get_items() as $item ) {
+				$sku  = $item->get_product()->get_sku();
+				$name = $item->get_name();
+				$qty  = $item->get_quantity();
+
+				if ( ! isset( $csv[ $sku ] ) ) {
+					$csv[ $sku ] = compact( 'name', 'qty' );
+				} else {
+					$csv[ $sku ]['qty'] += $qty;
+				}
+			}
+		}
+
+		return $csv;
+	}
+
+	private function generate_csv( $rows, $filename ) {
+        header( "Content-Type: text/csv" );
+        header( "Content-Disposition: attachment; filename=$filename" );
+
+		nocache_headers();
+
+        # Start the ouput
+        $output = fopen( "php://output", "w" );
+
+         # Then loop through the rows
+        foreach ( $rows as $row ) {
+            # Add the rows to the body
+            fputcsv( $output, $row ); // here you can change delimiter/enclosure
+        }
+
+        # Close the stream off
+        fclose( $output );
+
 	}
 
 	public function save_wholesale_order_meta( $post_id ) {
 		$order = wc_get_order( $post_id );
 
 		if ( $order ) {
-			$order->update_meta_data( 'is_wholesale_order', true );
+			$order->update_meta_data( self::$wholesale_custom_field, true );
 			$order->save_meta_data();
 		}
 	}
@@ -306,13 +458,7 @@ class Wholesale_Order extends Base {
 	protected static function set_is_wholesale_and_edit_mode() {
 		global $pagenow;
 
-		self::$is_edit_mode = (
-			'post.php' === $pagenow
-			&& isset( $_GET['post'] )
-			&& 'shop_order' === get_post_type( $_GET['post'] )
-			&& ( $order = get_post( absint( $_GET['post'] ) ) )
-			&& $order->is_wholesale_order
-		);
+		self::$is_edit_mode = parent::is_wholesale( parent::get_order_being_edited() );
 
 		self::$is_wholesale = self::$is_edit_mode || (
 			'post-new.php' === $pagenow
@@ -324,4 +470,7 @@ class Wholesale_Order extends Base {
 		);
 	}
 
+	public static function get_wholesale_custom_field() {
+		return self::$wholesale_custom_field;
+	}
 }

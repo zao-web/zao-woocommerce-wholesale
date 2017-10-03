@@ -240,3 +240,17 @@
 	}
 }
 
+.zwoowh-action-button-wrap {
+	display: none;
+	float: left;
+}
+
+.wc-order-item-avail-qty {
+	display: block;
+	margin-top: .5em;
+	font-size: .92em!important;
+	color: #888;
+	span {
+		color: #a00;
+	}
+}

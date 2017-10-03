@@ -277,9 +277,9 @@
 					var product = this.products.find( function( product ) {
 						return id === product.id;
 					} );
-					if ( product.manage_stock && qty > product.stock_quantity ) {
-						qty = product.stock_quantity;
-					}
+					// if ( product.manage_stock && qty > product.stock_quantity ) {
+					// 	qty = product.stock_quantity;
+					// }
 
 					product.qty = qty;
 				}
