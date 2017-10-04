@@ -22,9 +22,10 @@ class Order_Listing extends Order_Base {
 			?>
 			<style type="text/css">
 				.wholesale-tag {
+					display: inline-block;
 					text-transform: uppercase;
 					margin-left: 5px;
-					padding: 3px 4px;
+					padding: 0px 4px;
 					letter-spacing: 1px;
 					background: #d9dbf1;
 					font-size: .8em;
