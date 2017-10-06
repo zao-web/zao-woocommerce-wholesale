@@ -15,6 +15,7 @@ class Wholesale_Order extends Order_Base {
 	protected $shipstation                   = null;
 	protected $inventory_management          = null;
 	protected $backorders_management         = null;
+	protected $emails_management             = null;
 
 	public function __construct() {
 		if ( self::is_wholesale_context() ) {
@@ -23,9 +24,11 @@ class Wholesale_Order extends Order_Base {
 			$this->backorders_management = new Backorders_Management;
 			$this->shipstation = new ShipStation;
 		}
+		$this->emails_management = new Wholesale_Order_Emails;
 	}
 
 	public function init() {
+		$this->emails_management->init();
 		if ( self::is_wholesale_context() ) {
 
 			$this->quantity_management->init();
