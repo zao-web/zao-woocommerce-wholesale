@@ -18,7 +18,6 @@ class ShipStation extends Base {
 		}
 		add_action( 'wp_ajax_get_shipstation_rates', array( __CLASS__, 'ajax_get_order_rates' ) );
 		add_action( 'wp_ajax_set_shipstation_rates' , array( __CLASS__, 'ajax_set_order_rates' ) );
-		add_filter( 'woocommerce_shipstation_export_custom_field_2', array( '\\Zao\\ZaoWooCommerce_Wholesale\\Admin\\Wholesale_Order', 'get_wholesale_custom_field' ) );
 	}
 
 	public static function maybe_filter_shipping_method( $methods, $order ) {

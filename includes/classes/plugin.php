@@ -53,6 +53,8 @@ class Plugin extends Base {
 	public static function static_hooks() {
 		add_filter( 'woocommerce_dynamic_pricing_process_product_discounts', array( __NAMESPACE__ . '\\Admin\\Wholesale_Order', 'remove_dynamic_pricing_if_wholesale' ) );
 		add_action( 'init', array( __NAMESPACE__ . '\\Admin\\Wholesale_Order', 'register_backorder_status' ) );
+		add_filter( 'woocommerce_shipstation_export_custom_field_2', array( __NAMESPACE__ . '\\Admin\\Wholesale_Order', 'get_wholesale_custom_field' ) );
+
 	}
 
 }
