@@ -423,7 +423,7 @@ class Wholesale_Order extends Order_Base {
 		$order = wc_get_order( $post_id );
 
 		if ( $order ) {
-			$order->update_meta_data( self::$wholesale_custom_field, true );
+			$order->update_meta_data( self::$wholesale_custom_field, 'WS' );
 			$order->save_meta_data();
 		}
 	}
