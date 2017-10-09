@@ -22,19 +22,21 @@ class Wholesale_Order extends Order_Base {
 			$this->quantity_management = new Quantity_Management;
 			$this->inventory_management = new Inventory_Management;
 			$this->backorders_management = new Backorders_Management;
-			$this->shipstation = new ShipStation;
 		}
+
+		$this->shipstation = new ShipStation;
 		$this->emails_management = new Wholesale_Order_Emails;
 	}
 
 	public function init() {
 		$this->emails_management->init();
+		$this->shipstation->init();
+
 		if ( self::is_wholesale_context() ) {
 
 			$this->quantity_management->init();
 			$this->inventory_management->init();
 			$this->backorders_management->init();
-			$this->shipstation->init();
 
 			parent::modify_order_label( 'add_new_item', __( 'Add new wholesale order', 'zwoowh' ) );
 
