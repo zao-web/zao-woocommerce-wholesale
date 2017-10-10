@@ -539,6 +539,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 		}
 
 		var perPage = parentProduct.variations.length + 1;
+		perPage = perPage <= 100 ? perPage : 100;
 		var url = app.rest_url + 'wc/v2/products/' + parentProduct.id + '/variations/';
 		url += '?zwoowh_limit_fields=' + app.productFields.join(',');
 		url += '&status=publish&_wpnonce=' + app.rest_nonce;
