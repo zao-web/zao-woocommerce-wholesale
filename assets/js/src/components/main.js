@@ -227,13 +227,16 @@ window.ZWOOWH = window.ZWOOWH || {};
 			return app.getProductVariations();
 		}
 
-		var url = app.rest_url + 'wc/v2/products/' + parentProduct.id + '/variations/?zwoowh_limit_fields=' + app.productFields.join( ',' ) + '&status=publish&_wpnonce=' + app.rest_nonce;
-		url += '&per_page=' + ( parentProduct.variations.length + 1 ) + '&include[]=' + parentProduct.variations.join( '&include[]=' );
+		var perPage = parentProduct.variations.length + 1;
+		var url = app.rest_url + 'wc/v2/products/' + parentProduct.id + '/variations/';
+		url += '?zwoowh_limit_fields=' + app.productFields.join( ',' );
+		url += '&status=publish&_wpnonce=' + app.rest_nonce;
+		url += '&per_page=' + perPage;
+		url += '&include[]=' + parentProduct.variations.join( '&include[]=' );
 
 		if ( page > 1 ) {
 			url += '&page=' + page;
 		}
-
 
 		var params = {
 			type: 'GET',
@@ -254,7 +257,10 @@ window.ZWOOWH = window.ZWOOWH || {};
 
 				app.getProductVariations();
 			},
-			error: jqXHR => console.error( app.stockErrMessage( jqXHR ) ),
+			error: function( jqXHR ) {
+				console.warn( 'request details', { perPage, page, url } );
+				return console.error( app.stockErrMessage( jqXHR ) );
+			},
 		};
 
 		$.ajax( params );
@@ -333,6 +339,10 @@ window.ZWOOWH = window.ZWOOWH || {};
 			if ( textStatus ) {
 				msg += ' (' + textStatus + ')';
 			}
+		}
+
+		if ( err && err.data && err.data.params ) {
+			msg = { 'message': msg, 'params': err.data.params };
 		}
 
 		return msg;

@@ -1,5 +1,5 @@
 /**
- * Zao WooCommerce Wholesale - v0.1.0 - 2017-09-28
+ * Zao WooCommerce Wholesale - v0.1.0 - 2017-10-10
  * https://zao.is
  *
  * Copyright (c) 2017 Zao
@@ -538,8 +538,12 @@ window.ZWOOWH = window.ZWOOWH || {};
 			return app.getProductVariations();
 		}
 
-		var url = app.rest_url + 'wc/v2/products/' + parentProduct.id + '/variations/?zwoowh_limit_fields=' + app.productFields.join(',') + '&status=publish&_wpnonce=' + app.rest_nonce;
-		url += '&per_page=' + (parentProduct.variations.length + 1) + '&include[]=' + parentProduct.variations.join('&include[]=');
+		var perPage = parentProduct.variations.length + 1;
+		var url = app.rest_url + 'wc/v2/products/' + parentProduct.id + '/variations/';
+		url += '?zwoowh_limit_fields=' + app.productFields.join(',');
+		url += '&status=publish&_wpnonce=' + app.rest_nonce;
+		url += '&per_page=' + perPage;
+		url += '&include[]=' + parentProduct.variations.join('&include[]=');
 
 		if (page > 1) {
 			url += '&page=' + page;
@@ -565,6 +569,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 				app.getProductVariations();
 			},
 			error: function error(jqXHR) {
+				console.warn('request details', { perPage: perPage, page: page, url: url });
 				return console.error(app.stockErrMessage(jqXHR));
 			}
 		};
@@ -645,6 +650,10 @@ window.ZWOOWH = window.ZWOOWH || {};
 			if (textStatus) {
 				msg += ' (' + textStatus + ')';
 			}
+		}
+
+		if (err && err.data && err.data.params) {
+			msg = { 'message': msg, 'params': err.data.params };
 		}
 
 		return msg;
