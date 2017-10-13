@@ -11,6 +11,7 @@ class Order_Listing extends Order_Base {
 	public function init() {
 		add_action( 'admin_print_styles', array( $this, 'style_wholesale_tag' ), 999 );
 		add_action( 'manage_shop_order_posts_custom_column', array( $this, 'maybe_add_wholesale_tag' ), -5 );
+		add_filter( 'views_edit-shop_order', array( $this, 'add_wholesale_filter' ) );
 		if ( isset( $_GET['wholesale_only'] ) || isset( $_GET['backorders_only'] ) ) {
 			add_action( 'pre_get_posts', array( $this, 'maybe_filter_to_wholesale_only' ) );
 		}
@@ -92,6 +93,16 @@ class Order_Listing extends Order_Base {
 		echo str_replace( '</strong></a>', '</strong></a>' . $wholesale_tag, ob_get_clean() );
 	}
 
+	public function add_wholesale_filter( $views ) {
+		$filter_url = isset( $_GET['wholesale_only'] )
+			? remove_query_arg( 'wholesale_only' )
+			: add_query_arg( 'wholesale_only', 1 );
+
+		$views['only-wholesale-orders'] = '<a href="' . esc_url( $filter_url ) . '">' . __( 'Wholesale', 'zwoowh' ) . '</a>';
+
+		return $views;
+	}
+
 	public function maybe_filter_to_wholesale_only( $query ) {
 		if ( ! $query->is_main_query() || 'shop_order' !== $query->get( 'post_type' ) ) {
 			return;
@@ -110,5 +121,4 @@ class Order_Listing extends Order_Base {
 
 		$query->set( 'meta_query', $meta_query );
 	}
-
 }
