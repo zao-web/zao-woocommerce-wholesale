@@ -7,12 +7,20 @@ use Zao\ZaoWooCommerce_Wholesale\Base, WC_Order;
  * Adding ShipStation interface (if key/secret is defined)
  */
 class Wholesale_Order_Emails extends Order_Base {
+	protected $emails_to_disable = array(
+		'new_order',
+		'customer_processing_order',
+		'customer_completed_order',
+	);
+
 	public function __construct() {}
 
 	public function init() {
-		add_filter( 'woocommerce_email_enabled_new_order', array( $this, 'disable_if_order_is_wholesale' ), 10, 2 );
-		add_filter( 'woocommerce_email_enabled_customer_processing_order', array( $this, 'disable_if_order_is_wholesale' ), 10, 2 );
-		add_filter( 'woocommerce_email_enabled_customer_completed_order', array( $this, 'disable_if_order_is_wholesale' ), 10, 2 );
+		foreach ( $this->emails_to_disable as $action ) {
+			add_filter( "woocommerce_email_enabled_{$action}", array( $this, 'disable_if_order_is_wholesale' ), 10, 2 );
+		}
+
+		add_action( 'woocommerce_before_resend_order_emails', array( $this, 'maybe_enable_for_resend' ) );
 	}
 
 	public function disable_if_order_is_wholesale( $enabled, $order ) {
@@ -22,4 +30,17 @@ class Wholesale_Order_Emails extends Order_Base {
 
 		return $enabled;
 	}
+
+	public function maybe_enable_for_resend( $order ) {
+		if ( empty( $_POST['wc_order_action'] ) ) {
+			return;
+		}
+
+		$action = str_replace( 'send_email_', '', wc_clean( $_POST['wc_order_action'] ) );
+
+		if ( in_array( $action, $this->emails_to_disable ) ) {
+			remove_filter( "woocommerce_email_enabled_{$action}", array( $this, 'disable_if_order_is_wholesale' ), 10, 2 );
+		}
+	}
+
 }
