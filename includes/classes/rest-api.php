@@ -18,21 +18,30 @@ class REST_API {
 	}
 
 	public function maybe_filter_wholesale( $query ) {
-		if ( ! empty( self::$request['wholesale'] ) ) {
-			$tax_query = $query->get( 'tax_query' );
-
-			if ( ! is_array( $tax_query ) ) {
-				$tax_query = array();
-			}
-
-			$tax_query[] = array(
-				'taxonomy' => Taxonomy::SLUG,
-				'field'    => 'slug',
-				'terms'    => array( 'wholesale-only', 'wholesale' ),
-			);
-
-			$query->set( 'tax_query', $tax_query );
+		if ( empty( self::$request['wholesale'] ) ) {
+			return;
 		}
+
+		$parent_id = $query->get( 'post_parent' );
+
+		// If this is a sub-product request, do not modify query.
+		if ( ! empty( $parent_id ) ) {
+			return;
+		}
+
+		$tax_query = $query->get( 'tax_query' );
+
+		if ( ! is_array( $tax_query ) ) {
+			$tax_query = array();
+		}
+
+		$tax_query[] = array(
+			'taxonomy' => Taxonomy::SLUG,
+			'field'    => 'slug',
+			'terms'    => array( 'wholesale-only', 'wholesale' ),
+		);
+
+		$query->set( 'tax_query', $tax_query );
 	}
 
 	public function maybe_modify_response( $response, $handler, $request ) {
