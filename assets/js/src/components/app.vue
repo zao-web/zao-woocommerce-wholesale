@@ -33,7 +33,7 @@
 					<input v-model="search" class="large-text" type="search" id="search-products" :placeholder="searchPlaceholder" required>
 				</div>
 				<div class="tablenav-pages zwoowh-counts">
-					<span class="displaying-num"><span class="zwoowh-item-count">{{ products.length }}</span> items</span> <strong class="selected-num">| <span class="zwoowh-item-count">{{ selected }}</span> selected</strong>
+					<a @click.self.prevent="resetFilters" href="#" class="dashicons-before dashicons-no zwoowh-clear-filters">{{ clearFilters }}</a> | <span class="displaying-num"><span class="zwoowh-item-count">{{ products.length }}</span> items</span> <strong class="selected-num">| <span class="zwoowh-item-count">{{ selected }}</span> selected</strong>
 				</div>
 			</template>
 
@@ -121,6 +121,7 @@
 				btnText              : ZWOOWH.l10n.addProductsBtn,
 				clearBtn             : ZWOOWH.l10n.clearBtn,
 				variantProductsTitle : ZWOOWH.l10n.variantProductsTitle,
+				clearFilters         : ZWOOWH.l10n.clearFilters,
 				customTaxName        : ZWOOWH.l10n.customTaxName,
 				categoryTitle        : ZWOOWH.l10n.categoryTitle,
 			}
@@ -347,6 +348,13 @@
 				document.getElementById( 'quantities-form' ).reset();
 			},
 
+			resetFilters() {
+				this.sortKey          = 'sku';
+				this.reverse          = false;
+				this.excludeUnstocked = false;
+				this.search           = '';
+				this.selected         = '';
+			},
 		}
 	}
 </script>

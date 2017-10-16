@@ -166,6 +166,7 @@ class Wholesale_Order extends Order_Base {
 				'clearBtn'             => __( 'Clear', 'zwoowh' ),
 				'selectProductsTitle'  => __( 'Select Products', 'zwoowh' ),
 				'variantProductsTitle' => __( 'Variant Products', 'zwoowh' ),
+				'clearFilters'         => __( 'Clear Filters', 'zwoowh' ),
 				'customTaxName'        => '',
 				'categoryTitle'        => __( 'Categories', 'zwoowh' ),
 				'searchPlaceholder'    => __( 'Filter products by id, sku, name, parent, price, etc', 'zwoowh' ),
