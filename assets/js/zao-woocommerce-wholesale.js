@@ -1,5 +1,5 @@
 /**
- * Zao WooCommerce Wholesale - v0.1.0 - 2017-10-10
+ * Zao WooCommerce Wholesale - v0.1.0 - 2017-10-16
  * https://zao.is
  *
  * Copyright (c) 2017 Zao
@@ -43,7 +43,7 @@ exports.default = {
 			modalOpen: false,
 			sortKey: 'sku',
 			reverse: false,
-			excludeUnstocked: true,
+			excludeUnstocked: false,
 			search: '',
 			selected: '',
 			columns: ZWOOWH.columns,
@@ -868,7 +868,7 @@ exports.default = {
 			return this.product.img[2] || 40;
 		},
 		rowClass: function rowClass() {
-			return 'product-row' + (this.hasStock ? '' : ' disabled-row');
+			return 'product-row' + (this.hasStock ? '' : ' no-stock-row');
 		},
 		noStockTitle: function noStockTitle() {
 			return this.hasStock ? '' : ZWOOWH.l10n.noStockTitle;
@@ -881,6 +881,9 @@ exports.default = {
 		},
 		originalPriceTitle: function originalPriceTitle() {
 			return ZWOOWH.l10n.origPrice.replace('%d', parseFloat(this.product.price).toFixed(2));
+		},
+		noStock: function noStock() {
+			return !this.hasStock;
 		},
 		hasStock: function hasStock() {
 			if (this.product.manage_stock) {
@@ -897,7 +900,7 @@ exports.default = {
 			return 0;
 		},
 		isDisabled: function isDisabled() {
-			return !this.hasStock && !this.product.qty;
+			return false;
 		},
 		idAttr: function idAttr() {
 			return 'wholesale-product-' + this.product.id;
@@ -927,7 +930,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('tr',{class:_vm.rowClass,attrs:{"title":_vm.noStockTitle}},[_c('td',{staticClass:"img"},[_c('a',{attrs:{"href":_vm.product.editlink}},[_c('img',{attrs:{"src":_vm.imgSrc,"width":_vm.imgWidth,"height":_vm.imgHeight,"alt":_vm.product.name}})])]),_vm._v(" "),_c('td',{staticClass:"sku"},[_vm._v(_vm._s(_vm.product.sku))]),_vm._v(" "),_c('td',{staticClass:"name"},[_c('a',{attrs:{"href":_vm.product.editlink}},[_vm._v(_vm._s(_vm.product.name))]),_vm._v(" "),(_vm.product.parent)?_c('div',[_vm._v("\n\t\t\tParent: "),_c('a',{staticClass:"filter-link",attrs:{"href":_vm.product.editlink},on:{"click":function($event){if($event.target !== $event.currentTarget){ return null; }$event.preventDefault();_vm.doParentSearch($event)}}},[_vm._v(_vm._s(_vm.product.parent))])]):_vm._e()]),_vm._v(" "),_c('td',{staticClass:"price"},[_c('span',{attrs:{"title":_vm.originalPriceTitle}},[_vm._v("$"+_vm._s(_vm.formattedWholesalePrice))])]),_vm._v(" "),_c('td',{staticClass:"qty"},[(_vm.hasStock)?[_c('input',{attrs:{"tabindex":_vm.index + 1,"size":"3","id":_vm.idAttr,"name":_vm.qtyName,"disabled":_vm.isDisabled,"type":"number","step":"1","min":"0","pattern":"[0-9]"},domProps:{"value":_vm.product.qty},on:{"input":_vm.updateQty}}),(_vm.minStock)?[_vm._v(" "),_c('span',{staticStyle:{}},[_vm._v("of "+_vm._s(_vm.minStock))])]:_vm._e()]:[_vm._v("\n\t\t  "+_vm._s(_vm.noStockTitle)+" "),_c('a',{staticClass:"remove-out-of-stock-button dashicons dashicons-no filter-link",attrs:{"href":"#"},on:{"click":function($event){if($event.target !== $event.currentTarget){ return null; }$event.preventDefault();_vm.removeOutOfStock($event)}}})]],2),_vm._v(" "),_c('td',{staticClass:"categories"},[(_vm.hasCategories)?_c('ul',_vm._l((_vm.product.categories),function(category){return _c('li',[_c('a',{staticClass:"filter-link",attrs:{"href":"#"},on:{"click":function($event){if($event.target !== $event.currentTarget){ return null; }$event.preventDefault();_vm.doCategorySearch($event)}}},[_vm._v(_vm._s(category))])])})):_vm._e()]),_vm._v(" "),(_vm.customTaxName)?_c('td',{staticClass:"custom_tax"},[_c('a',{staticClass:"filter-link",attrs:{"href":"#"},on:{"click":function($event){if($event.target !== $event.currentTarget){ return null; }$event.preventDefault();_vm.doCustomTaxSearch($event)}}},[_vm._v(_vm._s(_vm.product.custom_tax))])]):_vm._e()])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('tr',{class:_vm.rowClass,attrs:{"title":_vm.noStockTitle}},[_c('td',{staticClass:"img"},[_c('a',{attrs:{"href":_vm.product.editlink}},[_c('img',{attrs:{"src":_vm.imgSrc,"width":_vm.imgWidth,"height":_vm.imgHeight,"alt":_vm.product.name}})])]),_vm._v(" "),_c('td',{staticClass:"sku"},[_vm._v(_vm._s(_vm.product.sku))]),_vm._v(" "),_c('td',{staticClass:"name"},[_c('a',{attrs:{"href":_vm.product.editlink}},[_vm._v(_vm._s(_vm.product.name))]),_vm._v(" "),(_vm.product.parent)?_c('div',[_vm._v("\n\t\t\tParent: "),_c('a',{staticClass:"filter-link",attrs:{"href":_vm.product.editlink},on:{"click":function($event){if($event.target !== $event.currentTarget){ return null; }$event.preventDefault();_vm.doParentSearch($event)}}},[_vm._v(_vm._s(_vm.product.parent))])]):_vm._e()]),_vm._v(" "),_c('td',{staticClass:"price"},[_c('span',{attrs:{"title":_vm.originalPriceTitle}},[_vm._v("$"+_vm._s(_vm.formattedWholesalePrice))])]),_vm._v(" "),_c('td',{staticClass:"qty"},[_c('input',{attrs:{"tabindex":_vm.index + 1,"size":"3","id":_vm.idAttr,"name":_vm.qtyName,"disabled":_vm.isDisabled,"type":"number","step":"1","min":"0","pattern":"[0-9]"},domProps:{"value":_vm.product.qty},on:{"input":_vm.updateQty}}),(_vm.minStock)?[_vm._v(" "),_c('span',{staticStyle:{}},[_vm._v("of "+_vm._s(_vm.minStock))])]:_vm._e(),_vm._v(" "),(_vm.noStock)?[_vm._v("\n\t\t  "+_vm._s(_vm.noStockTitle)+" "),_c('a',{staticClass:"remove-out-of-stock-button dashicons dashicons-no filter-link",attrs:{"href":"#"},on:{"click":function($event){if($event.target !== $event.currentTarget){ return null; }$event.preventDefault();_vm.removeOutOfStock($event)}}})]:_vm._e()],2),_vm._v(" "),_c('td',{staticClass:"categories"},[(_vm.hasCategories)?_c('ul',_vm._l((_vm.product.categories),function(category){return _c('li',[_c('a',{staticClass:"filter-link",attrs:{"href":"#"},on:{"click":function($event){if($event.target !== $event.currentTarget){ return null; }$event.preventDefault();_vm.doCategorySearch($event)}}},[_vm._v(_vm._s(category))])])})):_vm._e()]),_vm._v(" "),(_vm.customTaxName)?_c('td',{staticClass:"custom_tax"},[_c('a',{staticClass:"filter-link",attrs:{"href":"#"},on:{"click":function($event){if($event.target !== $event.currentTarget){ return null; }$event.preventDefault();_vm.doCustomTaxSearch($event)}}},[_vm._v(_vm._s(_vm.product.custom_tax))])]):_vm._e()])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)

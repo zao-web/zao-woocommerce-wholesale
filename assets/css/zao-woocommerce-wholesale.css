@@ -105,8 +105,8 @@
   margin: 0;
   font-size: 14px; }
 
-#zwoowh .disabled-row {
-  opacity: .5; }
+#zwoowh .no-stock-row {
+  opacity: .6; }
 
 #zwoowh .zwoowh-loading-spinner {
   margin: .77em .5em 0 0;

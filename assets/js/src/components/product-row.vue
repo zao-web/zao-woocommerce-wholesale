@@ -12,10 +12,8 @@
 		</td>
 		<td class="price"><span :title="originalPriceTitle">${{ formattedWholesalePrice }}</span></td>
 		<td class="qty">
-			<template v-if="hasStock">
-				<input :tabindex="index + 1" size="3" @input="updateQty" :id="idAttr" :name="qtyName" :disabled="isDisabled" :value="product.qty" type="number" step="1" min="0" pattern="[0-9]"/><template v-if="minStock">&nbsp;<span style="inline-block">of {{ minStock }}</span></template>
-			</template>
-			<template v-else>
+			<input :tabindex="index + 1" size="3" @input="updateQty" :id="idAttr" :name="qtyName" :disabled="isDisabled" :value="product.qty" type="number" step="1" min="0" pattern="[0-9]"/><template v-if="minStock">&nbsp;<span style="inline-block">of {{ minStock }}</span></template>
+			<template v-if="noStock">
 			  {{ noStockTitle }} <a @click.self.prevent="removeOutOfStock" href="#" class="remove-out-of-stock-button dashicons dashicons-no filter-link"></a>
 			</template>
 		</td>
@@ -49,7 +47,7 @@
 				return this.product.img[2] || 40;
 			},
 			rowClass() {
-				return 'product-row' + ( this.hasStock ? '' : ' disabled-row' );
+				return 'product-row' + ( this.hasStock ? '' : ' no-stock-row' );
 			},
 			noStockTitle() {
 				return this.hasStock ? '' : ZWOOWH.l10n.noStockTitle;
@@ -64,6 +62,10 @@
 
 			originalPriceTitle() {
 				return ZWOOWH.l10n.origPrice.replace( '%d', parseFloat( this.product.price ).toFixed(2) );
+			},
+
+			noStock() {
+				return ! this.hasStock;
 			},
 
 			hasStock() {
@@ -83,7 +85,9 @@
 			},
 
 			isDisabled() {
-				return ! ( this.hasStock ) && ! this.product.qty;
+				return false;
+				// We want to be able to create back-orders, so never disable.
+				// return ! ( this.hasStock ) && ! this.product.qty;
 			},
 
 			idAttr() {

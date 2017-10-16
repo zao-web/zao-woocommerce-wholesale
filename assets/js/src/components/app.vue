@@ -111,7 +111,7 @@
 				modalOpen            : false,
 				sortKey              : 'sku',
 				reverse              : false,
-				excludeUnstocked     : true,
+				excludeUnstocked     : false,
 				search               : '',
 				selected             : '',
 				columns              : ZWOOWH.columns,

@@ -161,7 +161,7 @@ class Wholesale_Order extends Order_Base {
 			'l10n' => array(
 				'somethingWrong'       => __( 'Something went wrong and we were not able to retrieve the wholesale products.', 'zwoowh' ),
 				'msgReceived'          => __( 'The error found:', 'zwoowh' ),
-				'noStockTitle'         => __( 'This item is out of stock.', 'zwoowh' ),
+				'noStockTitle'         => __( 'out of stock', 'zwoowh' ),
 				'addProductsBtn'       => __( 'Add Products', 'zwoowh' ),
 				'clearBtn'             => __( 'Clear', 'zwoowh' ),
 				'selectProductsTitle'  => __( 'Select Products', 'zwoowh' ),
