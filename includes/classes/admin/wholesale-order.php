@@ -55,6 +55,9 @@ class Wholesale_Order extends Order_Base {
 			add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'add_help' ) );
 
 			add_action( 'wp_ajax_woocommerce_json_search_customers', array( $this, 'maybe_limit_user_search_to_wholesalers' ), 5 );
+
+			add_action( 'woocommerce_order_actions_end', array( $this, 'add_frontend_view_link' ) );
+
 		} else {
 			add_action( 'admin_head', array( $this, 'maybe_add_wholesale_order_buttons' ), 9999 );
 			add_action( 'admin_init', array( $this, 'process_backorder_export' ) );
@@ -247,6 +250,14 @@ class Wholesale_Order extends Order_Base {
 
 	public function maybe_limit_user_search_to_wholesalers() {
 		add_action( 'pre_get_users', array( $this, 'limit_user_search_to_wholesalers' ) );
+	}
+
+	public function add_frontend_view_link( $order_id ) {
+		$order = wc_get_order( $order_id );
+		$url = $order ? $order->get_checkout_order_received_url( true ) : false;
+		if ( $url ) {
+			echo '<ul class="order_actions submitbox"><li class="wide"><div class="alignright"><a href="' . $url . '">' . __( 'View Order', 'zwoowh' ) . '</a></div></li></ul>';
+		}
 	}
 
 	/**
