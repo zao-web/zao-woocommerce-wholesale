@@ -32,7 +32,12 @@ class Wholesale_Order_Emails extends Order_Base {
 	}
 
 	public function maybe_enable_for_resend( $order ) {
-		if ( empty( $_POST['wc_order_action'] ) ) {
+		if (
+			// Check the nonce
+			empty( $_POST['woocommerce_meta_nonce'] )
+			|| ! wp_verify_nonce( $_POST['woocommerce_meta_nonce'], 'woocommerce_save_data' )
+			|| empty( $_POST['wc_order_action'] )
+		) {
 			return;
 		}
 
