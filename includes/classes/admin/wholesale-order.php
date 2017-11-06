@@ -374,6 +374,7 @@ class Wholesale_Order extends Order_Base {
 			]
 		] : [
 				'Order ID',
+				'Company',
 				'Order Date',
 				'Product Name',
 				'SKU',
@@ -391,6 +392,7 @@ class Wholesale_Order extends Order_Base {
 				$row['qty']
 			] : [
 				$row['id'],
+				$row['company'],
 				$row['date'],
 				$row['name'],
 				$sku,
@@ -414,15 +416,16 @@ class Wholesale_Order extends Order_Base {
 
 		foreach ( $orders as $order ) {
 
-			$id   = $order->get_id();
-			$date = $order->get_date_created();
+			$id      = $order->get_id();
+			$date    = $order->get_date_created();
+			$company = $order->get_billing_company();
 
 			foreach ( $order->get_items() as $item ) {
 				$sku  = $item->get_product()->get_sku();
 				$name = $item->get_name();
 				$qty  = $item->get_quantity();
 
-				$data = compact( 'name', 'qty', 'id', 'date' );
+				$data = compact( 'name', 'qty', 'id', 'date', 'company' );
 
 				if ( $grouped ) {
 					if ( ! isset( $csv[ $sku ] ) ) {
