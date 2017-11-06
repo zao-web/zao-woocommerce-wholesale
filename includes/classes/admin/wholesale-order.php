@@ -348,7 +348,7 @@ class Wholesale_Order extends Order_Base {
 		?>
 		<script type="text/javascript">
 			jQuery( function( $ ) {
-				$( 'a.page-title-action' ).after( '<a href="<?php echo esc_url( Menu::new_wholesale_order_url() ); ?>" class="page-title-action alignright"><?php esc_html_e( 'Add wholesale order', 'zwoowh' ); ?></a> <a href="<?php echo esc_url( add_query_arg( 'export_wholesale_backorders', 'true' ) ); ?>" class="page-title-action alignright"><?php esc_html_e( 'Export wholesale backorders', 'zwoowh' ); ?></a>' );
+				$( 'a.page-title-action' ).after( '<a href="<?php echo esc_url( Menu::new_wholesale_order_url() ); ?>" class="page-title-action alignright"><?php esc_html_e( 'Add wholesale order', 'zwoowh' ); ?></a> <a href="<?php echo esc_url( add_query_arg( 'export_wholesale_backorders', 'grouped' ) ); ?>" class="page-title-action alignright"><?php esc_html_e( 'Export wholesale backorders (grouped)', 'zwoowh' ); ?></a><a href="<?php echo esc_url( add_query_arg( 'export_wholesale_backorders', 'true' ) ); ?>" class="page-title-action alignright"><?php esc_html_e( 'Export wholesale backorders', 'zwoowh' ); ?></a>' );
 			});
 		</script>
 		<?php
@@ -363,17 +363,35 @@ class Wholesale_Order extends Order_Base {
 			return;
 		}
 
-		$csv_object = self::get_rows();
+		$is_grouped = $_GET['export_wholesale_backorders'] === 'grouped';
+		$csv_object = self::get_rows( $is_grouped );
 
-		$csv = [
-			[	'Product Name',
+		$csv = $is_grouped ? [
+			[
+				'Product Name',
 				'SKU',
 				'Backorder Level'
 			]
+		] : [
+				'Order ID',
+				'Order Date',
+				'Product Name',
+				'SKU',
+				'Quantity'
 		];
 
 		foreach ( $csv_object as $sku => $row ) {
-			$csv[] = [
+
+			$sku = explode( '_', $sku );
+			$sku = $sku[0];
+
+			$csv[] = $is_grouped ? [
+				$row['name'],
+				$sku,
+				$row['qty']
+			] : [
+				$row['id'],
+				$row['date'],
 				$row['name'],
 				$sku,
 				$row['qty']
@@ -385,7 +403,7 @@ class Wholesale_Order extends Order_Base {
 		exit;
 	}
 
-	private function get_rows() {
+	private static function get_rows( $grouped = false ) {
 		$orders = wc_get_orders( array( 'status' => 'wc-wholesale-back', 'limit' => -1 ) );
 
 		if ( empty( $orders ) ) {
@@ -395,39 +413,50 @@ class Wholesale_Order extends Order_Base {
 		$csv = [];
 
 		foreach ( $orders as $order ) {
+
+			$id   = $order->get_id();
+			$date = $order->get_date_created();
+
 			foreach ( $order->get_items() as $item ) {
 				$sku  = $item->get_product()->get_sku();
 				$name = $item->get_name();
 				$qty  = $item->get_quantity();
 
-				if ( ! isset( $csv[ $sku ] ) ) {
-					$csv[ $sku ] = compact( 'name', 'qty' );
+				$data = compact( 'name', 'qty', 'id', 'date' );
+
+				if ( $grouped ) {
+					if ( ! isset( $csv[ $sku ] ) ) {
+						$csv[ $sku ] = $data;
+					} else {
+						$csv[ $sku ]['qty'] += $qty;
+					}
 				} else {
-					$csv[ $sku ]['qty'] += $qty;
+					$csv[ $sku . '_' . $id ] = $data;
 				}
+
 			}
 		}
 
 		return $csv;
 	}
 
-	private function generate_csv( $rows, $filename ) {
-        header( "Content-Type: text/csv" );
-        header( "Content-Disposition: attachment; filename=$filename" );
+	private static function generate_csv( $rows, $filename ) {
+		header( "Content-Type: text/csv" );
+		header( "Content-Disposition: attachment; filename=$filename" );
 
 		nocache_headers();
 
-        # Start the ouput
-        $output = fopen( "php://output", "w" );
+		# Start the ouput
+		$output = fopen( "php://output", "w" );
 
-         # Then loop through the rows
-        foreach ( $rows as $row ) {
-            # Add the rows to the body
-            fputcsv( $output, $row ); // here you can change delimiter/enclosure
-        }
+		 # Then loop through the rows
+		foreach ( $rows as $row ) {
+		    # Add the rows to the body
+		    fputcsv( $output, $row ); // here you can change delimiter/enclosure
+		}
 
-        # Close the stream off
-        fclose( $output );
+		# Close the stream off
+		fclose( $output );
 
 	}
 
