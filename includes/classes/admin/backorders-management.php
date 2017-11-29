@@ -155,7 +155,6 @@ class Backorders_Management extends Order_Base {
 			$backorders = false;
 		}
 
-
 		if ( ! empty( $backorders ) ) {
 			?>
 			<span class="zwoowh-action-button-wrap">
@@ -224,50 +223,56 @@ class Backorders_Management extends Order_Base {
 			$items = $product['items'];
 
 			$available_qty = $product['product']->get_stock_quantity();
+			if ( ! is_numeric( $available_qty ) ) {
+				$available_qty = 0;
+			}
 
 			foreach ( $items as $item ) {
-
 				if ( $item['quantity'] > $available_qty ) {
 
-					$deficit = is_numeric( $available_qty ) ? $item['quantity'] - $available_qty : 0;
+					$out_of_stock = $available_qty <= 0;
 
-					if ( $deficit ) {
+					$deficit = $out_of_stock
+						? $item['quantity']
+						: $item['quantity'] - $available_qty;
 
-						$backorders[ $product['product']->get_id() ][ $item->get_id() ][] = array(
-							// 'item' => $item,
-							'item' => $item,
-							'qty'  => $deficit,
-						);
-
-						// error_log( __FUNCTION__ . ':' . __LINE__ .') $item: '. print_r( array(
-						// 	'item' => $item->get_name() . ' ('. $item->get_id() .')',
-						// 	'prod_id' => $id,
-						// 	'item attmempted qty' => $item['quantity'],
-						// 	'backorder item qty' => $deficit,
-						// 	'item new qty' => $available_qty,
-						// 	'remove item from order?' => $available_qty <= 0,
-						// ), true ) );
-
-						if ( $update ) {
-							if ( $available_qty > 0 ) {
-								$_product = Order_Item_Cloner::get_item_product( $item );
-
-								if ( $_product ) {
-									$item->set_product( $_product );
-									$item = Order_Item_Cloner::set_item_totals( $item, $available_qty );
-									$item->save();
-								}
-
-							} else {
-								$order->remove_item( $item->get_id() );
-							}
-						}
+					if ( ! $deficit ) {
+						continue;
 					}
-				}
+
+					$backorders[ $product['product']->get_id() ][ $item->get_id() ][] = array(
+						'item' => $item,
+						'qty'  => $deficit,
+					);
+					// self::maybe_log( $item, $id, $deficit, $available_qty );
+
+					// If we're just checking for backorders, do not attempt to update the order.
+					if ( ! $update ) {
+						continue;
+					}
+
+					if ( $out_of_stock ) {
+						$order->remove_item( $item->get_id() );
+						continue;
+					}
+
+					$_product = Order_Item_Cloner::get_item_product( $item );
+
+					if ( ! $_product ) {
+						continue;
+					}
+
+					$item->set_product( $_product );
+					$item = Order_Item_Cloner::set_item_totals( $item, $available_qty );
+					$item->save();
+
+				} // if ( $item['quantity'] > $available_qty )
 
 				$available_qty -= $item['quantity'];
-			}
-		}
+
+			} // foreach ( $items as $item )
+
+		} // foreach ( $all_products as $id => &$product )
 
 		if ( $update ) {
 			$order->calculate_totals();
@@ -325,6 +330,17 @@ class Backorders_Management extends Order_Base {
 
 	public static function set_backorder_status( Order_Cloner $cloner ) {
 		$cloner->order->set_status( 'wholesale-back' );
+	}
+
+	public static function maybe_log( $item, $id, $deficit, $available_qty ) {
+		error_log( date('Y-m-d H:i:s') .' $item: '. print_r( array(
+			'item' => $item->get_name() . ' ('. $item->get_id() .')',
+			'prod_id' => $id,
+			'item attmempted qty' => $item['quantity'],
+			'backorder item qty' => $deficit,
+			'item available qty' => $available_qty,
+			'remove item from order?' => $available_qty <= 0,
+		), true ) ."\r\n", 3, WP_CONTENT_DIR . '/backorders.log' );
 	}
 
 }
