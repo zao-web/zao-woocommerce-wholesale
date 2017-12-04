@@ -136,6 +136,9 @@ class REST_API {
 	}
 
 	public static function get_product_image( $product_id, $filter ) {
+		add_filter( 'woocommerce_resize_images', '__return_false' );
+		remove_action( 'wp_get_attachment_image_src', array( 'WC_Regenerate_Images', 'maybe_resize_image' ), 10, 4 );
+
 		$parts = explode( ':', $filter );
 		$size = 'full';
 		if ( isset( $parts[1] ) ) {
