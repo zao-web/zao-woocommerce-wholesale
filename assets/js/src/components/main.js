@@ -233,7 +233,7 @@ window.ZWOOWH = window.ZWOOWH || {};
 		url += '?zwoowh_limit_fields=' + app.productFields.join( ',' );
 		url += '&status=publish&_wpnonce=' + app.rest_nonce;
 		url += '&per_page=' + perPage;
-		url += '&include=' + parentProduct.variations.join( ',' );
+		url += '&variations_as_include=1';
 
 		if ( page > 1 ) {
 			url += '&page=' + page;

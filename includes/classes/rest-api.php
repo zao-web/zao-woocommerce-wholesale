@@ -10,6 +10,7 @@ class REST_API {
 		add_filter( 'rest_request_before_callbacks', array( $this, 'store_request' ), 10, 3 );
 		add_action( 'pre_get_posts', array( $this, 'maybe_filter_wholesale' ) );
 		add_filter( 'rest_request_after_callbacks', array( $this, 'maybe_modify_response' ), 10, 3 );
+		add_filter( 'woocommerce_rest_product_variation_object_query', array( $this, 'maybe_set_variations_include' ), 10, 2 );
 	}
 
 	public function store_request( $response, $handler, $request ) {
@@ -151,6 +152,22 @@ class REST_API {
 		}
 
 		return false;
+	}
+
+	public function maybe_set_variations_include( $args, $request ) {
+		if ( isset( $request['variations_as_include'] ) ) {
+			if ( empty( $args['post__in'] ) || ! is_array( $args['post__in'] ) ) {
+				$args['post__in'] = array();
+			}
+
+			$product_id = absint( $request['product_id'] );
+			$product = wc_get_product( $product_id );
+			if ( $product && $product->is_type( 'variable' ) && $product->has_child() ) {
+				$args['post__in'] = array_merge( $args['post__in'], $product->get_children() );
+			}
+		}
+
+		return $args;
 	}
 
 }
