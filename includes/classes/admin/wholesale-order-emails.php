@@ -20,7 +20,8 @@ class Wholesale_Order_Emails extends Order_Base {
 			add_filter( "woocommerce_email_enabled_{$action}", array( $this, 'disable_if_order_is_wholesale' ), 10, 2 );
 		}
 
-		add_action( 'woocommerce_before_resend_order_emails', array( $this, 'maybe_enable_for_resend' ) );
+		// Disable our disabler disabler because sometimes completed order emails are still being sent when they shouldn't.
+		// add_action( 'woocommerce_before_resend_order_emails', array( $this, 'maybe_enable_for_resend' ) );
 	}
 
 	public function disable_if_order_is_wholesale( $enabled, $order ) {
